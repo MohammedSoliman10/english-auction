@@ -55,6 +55,15 @@ URL, addresses as env vars).
 are user-provisioned at that point (FR-013/FR-014). Tracked in the README
 “Deployment target” section.
 
+**Task status — T069 BLOCKED**: remote production validation cannot run
+until a real host exists. Per the task's escape clause this is recorded
+here rather than silently skipped. When the Vercel deployment lands (user
+provides the wallet key + RPC URL), re-run the quickstart “Production
+Deployment” section against the public origin and re-verify **V1** (cold
+load + wallet add/switch-network against `https://<host>/rpc`), **V4**
+(bidding through the public proxy), and **V8** (chain-death →
+`chain_unreachable` recovery) there.
+
 ## 4. Quickstart runners are environment-local
 
 **What**: the V1–V9 runner scripts used for live validation live outside the
