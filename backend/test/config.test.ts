@@ -28,3 +28,19 @@ describe('GET /api/config', () => {
     expect(res.body.message).toMatch(/deploy\.sh/);
   });
 });
+
+describe('loadConfig — T066 default fallbacks (constitution III branches)', () => {
+  it('falls back to every documented default for an empty env', () => {
+    expect(loadConfig({})).toEqual({
+      port: 3000,
+      anvilUrl: 'http://127.0.0.1:8545',
+      chainId: 2026,
+      chainName: 'English Auction Chain',
+      rpcUrl: '/rpc',
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+      auctionAddress: '',
+      nftAddress: '',
+      deployedAt: '',
+    });
+  });
+});

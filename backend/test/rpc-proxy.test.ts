@@ -59,6 +59,15 @@ describe('POST/GET /rpc proxy', () => {
     expect(res.body.error).toBe('invalid_json');
   });
 
+  it('returns 400 invalid_json when ?data= is missing entirely (T066)', async () => {
+    const app = createApp(testConfig({ anvilUrl: upstream.url }));
+    const res = await request(app).get('/rpc');
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ error: 'invalid_json' });
+    expect(res.body.message).toMatch(/missing/i);
+    expect(upstream.received).toEqual([]);
+  });
+
   it('returns 502 chain_unreachable when the node is down', async () => {
     const app = createApp(testConfig({ anvilUrl: 'http://127.0.0.1:1' }));
     const res = await request(app)
