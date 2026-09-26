@@ -43,11 +43,22 @@ npm start                       # backend :3000 — SPA + /api/* + /rpc proxy
 The browser only ever talks to same-origin `/rpc` (proxied to the localhost-bound
 node) and `/api/config` (runtime addresses — never baked into the bundle, R4).
 
-**Deployment target — Vercel** (pending, T069): requires adapting the Express app
-to a serverless function (`/api/*`) plus an `/rpc` rewrite to a real RPC URL, with
-`AUCTION_ADDRESS` / `NFT_ADDRESS` / `RPC_URL` supplied as environment variables.
-The wallet key and RPC URL are provisioned at deploy time (FR-013/FR-014 — no
-signer or secret ships in the bundle).
+**Deployment target — Vercel**: the serverless adaptation lives in
+[`api/`](api/) — three path-agnostic functions reusing the shared Express
+app (`backend/src/vercel.ts` rebase-paths each request to its owned route,
+so `/rpc` works through the `vercel.json` rewrite under any URL semantics),
+plus [`vercel.json`](vercel.json) (Vite build → `frontend/dist`, `/rpc`
+rewrite). Remaining deploy-time steps (T069, blocked on provisioning):
+
+1. `npm i -g vercel` → `vercel link` → set project env vars:
+   `ANVIL_URL` (remote RPC), `CHAIN_ID`, `CHAIN_NAME`, `AUCTION_ADDRESS`,
+   `NFT_ADDRESS` (and optionally `NATIVE_CURRENCY_NAME/SYMBOL/DECIMALS`).
+2. Deploy the contracts to that chain
+   (`forge script --rpc-url $ANVIL_URL --private-key <deployer key>`),
+   then put the resulting addresses into the env vars.
+3. `vercel deploy --prod` and re-verify quickstart V1, V4, V8 against the
+   public origin — the wallet add-network flow uses
+   `https://<host>/rpc` (same-origin, built by the frontend at runtime).
 
 ## Validation
 

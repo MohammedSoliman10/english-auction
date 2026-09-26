@@ -44,12 +44,14 @@ stdout line (behavioral, still not coverage-attributed) — or fold the block
 into an exported `startServer()` and call it from a test with a stubbed
 listener.
 
-## 3. Vercel serverless adaptation (pending deploy, T069)
+## 3. Vercel deployment (pending provisioning — T069)
 
-**What**: the Express app assumes a long-lived Node process (static SPA +
-`/rpc` proxy to a localhost-bound anvil). Deploying to Vercel needs a
-serverless split (API function for `/api/*`, rewrite for `/rpc` to a real RPC
-URL, addresses as env vars).
+**What**: the serverless adaptation is **implemented and tested**
+(`api/{index,config,health}.ts` path-agnostic functions over the shared
+Express app + `vercel.json`; `NATIVE_CURRENCY_*` env overrides for
+arbitrary EVM chains), but no deployment exists yet: the wallet key and
+remote RPC URL are user-provisioned (FR-013/FR-014), a Vercel project must
+be linked, and contracts must be deployed to the target chain first.
 
 **Why deferred**: deployment is the endgame step; the wallet key and RPC URL
 are user-provisioned at that point (FR-013/FR-014). Tracked in the README

@@ -28,7 +28,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     chainId: Number(env.CHAIN_ID ?? 2026),
     chainName: env.CHAIN_NAME ?? 'English Auction Chain',
     rpcUrl: '/rpc',
-    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    // Env-overridable so the app can target any EVM chain on deploy (T069);
+    // defaults keep the hosted Anvil demo (ETH-native) unchanged.
+    nativeCurrency: {
+      name: env.NATIVE_CURRENCY_NAME ?? 'Ether',
+      symbol: env.NATIVE_CURRENCY_SYMBOL ?? 'ETH',
+      decimals: Number(env.NATIVE_CURRENCY_DECIMALS ?? 18),
+    },
     auctionAddress: env.AUCTION_ADDRESS ?? '',
     nftAddress: env.NFT_ADDRESS ?? '',
     deployedAt: env.DEPLOYED_AT ?? '',

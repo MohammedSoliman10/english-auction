@@ -44,3 +44,15 @@ describe('loadConfig — T066 default fallbacks (constitution III branches)', ()
     });
   });
 });
+
+describe('loadConfig — native currency overrides (T069 Vercel deploy)', () => {
+  it('accepts an env-provided native currency for non-ETH chains', () => {
+    const cfg = loadConfig({
+      ...TEST_ENV,
+      NATIVE_CURRENCY_NAME: 'Test Coin',
+      NATIVE_CURRENCY_SYMBOL: 'TST',
+      NATIVE_CURRENCY_DECIMALS: '6',
+    });
+    expect(cfg.nativeCurrency).toEqual({ name: 'Test Coin', symbol: 'TST', decimals: 6 });
+  });
+});
