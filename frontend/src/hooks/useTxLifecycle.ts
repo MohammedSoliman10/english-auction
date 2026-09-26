@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import type {
   Abi,
@@ -9,6 +9,7 @@ import type {
   WriteContractParameters,
 } from 'viem';
 import { EnglishAuctionAbi } from '../lib/abi/EnglishAuction';
+import { IERC721Abi } from '../lib/abi/IERC721';
 import { SolimanWeb3Abi } from '../lib/abi/SolimanWeb3';
 import { friendlyMessage } from '../lib/errors';
 import { useTxStore } from '../app/TxProvider';
@@ -40,15 +41,17 @@ type WritesOf<abi extends Abi> = {
 
 /**
  * Parameters accepted by `writeContractAsync` — the per-function union over
- * both writable contracts, so every hook gets exact `functionName`/`args`/
- * `value` checking (e.g. `bid()` must send value, `mintNFT()` must not).
+ * the writable contracts (auction + SolimanWeb3 + the ERC-721 the seller
+ * escrows into), so every hook gets exact `functionName`/`args`/`value`
+ * checking (e.g. `bid()` must send value, `mintNFT()` must not).
  *
  * Deriving via `Parameters<writeContractAsync>` degrades the generic ABI
  * mutability and collapses `value` to `undefined` — hence this explicit union.
  */
 export type TxWriteParams =
   | WritesOf<typeof EnglishAuctionAbi>
-  | WritesOf<typeof SolimanWeb3Abi>;
+  | WritesOf<typeof SolimanWeb3Abi>
+  | WritesOf<typeof IERC721Abi>;
 
 /** Raw generic instantiation writeContractAsync accepts (see `write`). */
 type RawWriteParams = Parameters<
@@ -101,16 +104,29 @@ export function useTxLifecycle(): UseTxLifecycleResult {
   const [tx, setTx] = useState<TxLifecycle>({ status: 'idle' });
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
   const { writeContractAsync } = useWriteContract();
-  const receipt = useWaitForTransactionReceipt({ hash });
   const store = useTxStore();
+
+  // Complete lifecycles that outlive the panel which started them: a phase
+  // flip unmounts the writing panel (StartPanel → BidForm right after
+  // start()), so every surviving mounted instance also watches the store's
+  // pending hash — wagmi dedupes the identical receipt query (quickstart V3).
+  const storePendingHash = store?.tx.status === 'pending' ? store.tx.hash : undefined;
+  const watchHash = hash ?? storePendingHash;
+  const receipt = useWaitForTransactionReceipt({ hash: watchHash });
 
   // FR-010 global surface: mirror every transition into the TxProvider store
   // when mounted inside the app tree. Depends only on the *stable* `publish`
   // callback (not the context value), so an external reset() from the toast's
   // dismiss control is never immediately republished — and standalone usage
   // without a provider keeps its own state (T037 store tests).
+  // The *initial* idle is never published: a freshly mounted hook (BidForm
+  // mounting at the phase flip) must not wipe a live or finished toast with
+  // its own idle state. Only real transitions and reset() reach the store.
   const publish = store?.publish;
+  const hadTransition = useRef(false);
   useEffect(() => {
+    if (tx.status === 'idle' && !hadTransition.current) return;
+    hadTransition.current = true;
     publish?.(tx);
   }, [publish, tx]);
 
@@ -141,22 +157,23 @@ export function useTxLifecycle(): UseTxLifecycleResult {
     setTx({ status: 'idle' });
   }, []);
 
-  // Apply the mined receipt: success / reverted (only for the current hash).
+  // Apply the mined receipt: success / reverted (only for the watched hash —
+  // own write, or a store pending tx whose starting panel already unmounted).
   useEffect(() => {
-    if (!hash) return;
+    if (!watchHash) return;
     if (receipt.isError) {
-      setTx({ status: 'reverted', hash, message: friendlyMessage(errorText(receipt.error)) });
+      setTx({ status: 'reverted', hash: watchHash, message: friendlyMessage(errorText(receipt.error)) });
       return;
     }
     const mined = receipt.data;
     if (!mined) return;
-    if (mined.transactionHash.toLowerCase() !== hash.toLowerCase()) return;
+    if (mined.transactionHash.toLowerCase() !== watchHash.toLowerCase()) return;
     if (mined.status === 'success') {
-      setTx({ status: 'success', hash });
+      setTx({ status: 'success', hash: watchHash });
     } else {
-      setTx({ status: 'reverted', hash, message: friendlyMessage(MINED_REVERT_MESSAGE) });
+      setTx({ status: 'reverted', hash: watchHash, message: friendlyMessage(MINED_REVERT_MESSAGE) });
     }
-  }, [hash, receipt.data, receipt.isError, receipt.error]);
+  }, [watchHash, receipt.data, receipt.isError, receipt.error]);
 
   return { tx, write, reset };
 }

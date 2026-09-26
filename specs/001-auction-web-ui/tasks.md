@@ -114,15 +114,15 @@ phase = OPEN_FOR_BIDS with running countdown; non-seller/double-start blocked (q
 
 ### Tests for User Story 2 ⚠️ (write FIRST — must fail)
 
-- [ ] T039 [P] [US2] RED contract tests for `start()` in `contracts/test/EnglishAuction.t.sol`: reverts `"not seller"`, `"started"` (double start); escrow `ownerOf(nftId) == address(this)`; `endAt == block.timestamp + duration`; emits `Start()`; requires prior NFT approval (revert bubbles from transfer)
-- [ ] T040 [P] [US2] RED tests `frontend/src/hooks/useStartAuction.test.ts`: `validate()` blocks not-seller / already-started / not-connected / wrong-network with catalogue messages (FR-004, US2 scenarios 2–3)
-- [ ] T041 [P] [US2] RED tests `frontend/src/sections/StartPanel.test.tsx`: seller sees start CTA pre-start; non-seller sees read-only state; after start → LIVE flip + countdown appears (US2 scenario 4 reload-safe)
+- [X] T039 [P] [US2] RED contract tests for `start()` in `contracts/test/EnglishAuction.t.sol`: reverts `"not seller"`, `"started"` (double start); escrow `ownerOf(nftId) == address(this)`; `endAt == block.timestamp + duration`; emits `Start()`; requires prior NFT approval (revert bubbles from transfer)
+- [X] T040 [P] [US2] RED tests `frontend/src/hooks/useStartAuction.test.ts`: `validate()` blocks not-seller / already-started / not-connected / wrong-network with catalogue messages (FR-004, US2 scenarios 2–3)
+- [X] T041 [P] [US2] RED tests `frontend/src/sections/StartPanel.test.tsx`: seller sees start CTA pre-start; non-seller sees read-only state; after start → LIVE flip + countdown appears (US2 scenario 4 reload-safe)
 
 ### Implementation for User Story 2
 
-- [ ] T042 [US2] Implement `frontend/src/hooks/useStartAuction.ts` depends on T040, T026
-- [ ] T043 [US2] Implement `frontend/src/sections/StartPanel.tsx` (escrow step: approve + start, seller gating) → T041 GREEN
-- [ ] T044 [US2] Extend `frontend/src/App.tsx` pre-start composition (MintPanel placeholder area + StartPanel) and add integration test `frontend/src/App.test.tsx` asserting start → phase transition + countdown (US2 scenarios 1, 4)
+- [X] T042 [US2] Implement `frontend/src/hooks/useStartAuction.ts` depends on T040, T026
+- [X] T043 [US2] Implement `frontend/src/sections/StartPanel.tsx` (escrow step: approve + start, seller gating) → T041 GREEN
+- [X] T044 [US2] Extend `frontend/src/App.tsx` pre-start composition (MintPanel placeholder area + StartPanel) and add integration test `frontend/src/App.test.tsx` asserting start → phase transition + countdown (US2 scenarios 1, 4)
 
 **Checkpoint**: US2 independent — seller can launch; US1 bidding then works against it
 

@@ -22,6 +22,13 @@ const GENERIC = 'Transaction could not be completed — try again.';
  */
 export const NOT_CONNECTED_MESSAGE = 'Connect a wallet to continue.';
 
+/**
+ * US2 escrow prerequisite (spec §7 open-question resolution): the seller
+ * must still own the auctioned NFT before approve/start can be prompted.
+ */
+export const NOT_OWNER_MESSAGE =
+  'You no longer own the auction NFT — transfer it back to start.';
+
 export function wrongNetworkMessage(chainName: string): string {
   return `Wrong network — switch to ${chainName}.`;
 }

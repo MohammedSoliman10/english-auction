@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, render, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { EnglishAuctionAbi } from '../lib/abi/EnglishAuction';
@@ -283,5 +283,93 @@ describe('useTxLifecycle ↔ global TxProvider (FR-010 mount, T037)', () => {
       result.current.reset();
     });
     expect(published?.status).toBe('idle');
+  });
+
+  it('a newly mounted hook does not wipe a live toast with its initial idle (quickstart V3)', async () => {
+    let api: ReturnType<typeof useTxLifecycle> | null = null;
+    function Probe() {
+      api = useTxLifecycle();
+      return null;
+    }
+    // ONE tree — the panel swap happens inside the same provider (App root).
+    const view = render(
+      <TxProvider>
+        <Capture />
+        <Probe />
+      </TxProvider>,
+    );
+    mocks.writeContractAsync.mockRejectedValue({ code: 4001 });
+    await act(async () => {
+      await api?.write(PARAMS);
+    });
+    expect(published?.status).toBe('rejected');
+
+    // panel swap at the phase flip: writing panel out…
+    view.rerender(
+      <TxProvider>
+        <Capture />
+        <span />
+      </TxProvider>,
+    );
+    // …fresh hook mounts in
+    view.rerender(
+      <TxProvider>
+        <Capture />
+        <Probe />
+      </TxProvider>,
+    );
+    expect(published?.status).toBe('rejected'); // store keeps the finished toast
+  });
+
+  it('a surviving mounted hook completes a pending store tx after the writing panel unmounts', async () => {
+    let api: ReturnType<typeof useTxLifecycle> | null = null;
+    function Writer() {
+      api = useTxLifecycle();
+      return null;
+    }
+    function Survivor() {
+      api = useTxLifecycle();
+      return null;
+    }
+    const view = render(
+      <TxProvider>
+        <Capture />
+        <Writer />
+      </TxProvider>,
+    );
+    mocks.writeContractAsync.mockResolvedValue(HASH);
+    await act(async () => {
+      await api?.write(PARAMS);
+    });
+    expect(published?.status).toBe('pending');
+
+    // start() still in flight when the phase flips away: writer unmounts…
+    view.rerender(
+      <TxProvider>
+        <Capture />
+        <span />
+      </TxProvider>,
+    );
+    expect(published?.status).toBe('pending');
+
+    // …a surviving mounted instance picks the lifecycle up (mount = no clobber)
+    view.rerender(
+      <TxProvider>
+        <Capture />
+        <Survivor />
+      </TxProvider>,
+    );
+    expect(published?.status).toBe('pending');
+
+    mocks.receipt.data = { status: 'success', transactionHash: HASH };
+    act(() => {
+      view.rerender(
+        <TxProvider>
+          <Capture />
+          <Survivor />
+        </TxProvider>,
+      );
+    });
+    expect(published?.status).toBe('success');
   });
 });

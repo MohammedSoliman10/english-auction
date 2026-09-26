@@ -160,4 +160,46 @@ contract EnglishAuctionTest is Test {
         vm.prank(alice);
         auction.bid{value: 1 ether}();
     }
+
+    // ── T039 (US2): start() ─────────────────────────────────────────────────
+
+    function test_RevertWhen_StartByNonSeller() public {
+        vm.expectRevert("not seller");
+        vm.prank(alice);
+        auction.start();
+    }
+
+    function test_RevertWhen_DoubleStart() public {
+        _startAuction();
+        vm.expectRevert("started");
+        vm.prank(seller);
+        auction.start();
+    }
+
+    function test_StartEscrowsNftToAuction() public {
+        _startAuction();
+        assertEq(nft.ownerOf(TOKEN_ID), address(auction), "NFT escrowed by the auction");
+        assertTrue(auction.started(), "phase flips to started");
+    }
+
+    function test_StartSetsEndAtToNowPlusDuration() public {
+        _startAuction();
+        assertEq(auction.endAt(), block.timestamp + DURATION, "endAt = block.timestamp + duration");
+    }
+
+    function test_EmitStartOnStart() public {
+        vm.startPrank(seller);
+        nft.approve(address(auction), TOKEN_ID);
+        vm.expectEmit(true, true, true, true, address(auction));
+        emit EnglishAuction.Start();
+        auction.start();
+        vm.stopPrank();
+    }
+
+    function test_RevertWhen_StartWithoutNftApproval() public {
+        // transferFrom bubbles the ERC-721 approval failure (no approval set).
+        vm.expectRevert();
+        vm.prank(seller);
+        auction.start();
+    }
 }
