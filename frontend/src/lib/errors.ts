@@ -36,6 +36,17 @@ export const NOTHING_TO_WITHDRAW_MESSAGE = 'Nothing to withdraw';
  */
 export const ALREADY_SETTLED_MESSAGE = 'Auction already settled';
 
+/** US5 pre-check: minting needs a metadata JSON URI (spec US5 scenario 1). */
+export const EMPTY_URI_MESSAGE = 'Metadata URI is required';
+
+/**
+ * US5 pre-check (spec US5 scenario 2): "the app warns before spending gas" —
+ * an obviously wrong URI cannot be fetched later, so it is refused up front.
+ * Valid schemes: `http://`, `https://`, `ipfs://`, `data:`.
+ */
+export const INVALID_URI_MESSAGE =
+  'URI must start with http://, https://, ipfs://, or data:';
+
 /**
  * US2 escrow prerequisite (spec §7 open-question resolution): the seller
  * must still own the auctioned NFT before approve/start can be prompted.

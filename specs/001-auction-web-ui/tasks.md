@@ -184,15 +184,15 @@ empty/invalid URI warned (quickstart V2)
 
 ### Tests for User Story 5 ⚠️ (write FIRST — must fail)
 
-- [ ] T057 [P] [US5] RED contract tests in `contracts/test/SolimanWeb3.t.sol`: first `mintNFT` returns id 0 and assigns ownership; sequential ids 1, 2…; `tokenURI(id)` == submitted jsonUri; `_safeMint` behavior: mint to a contract without `onERC721Received` reverts; mint to EOA succeeds (R5 #6)
-- [ ] T058 [P] [US5] RED tests `frontend/src/hooks/useMintNft.test.ts`: `validate()` blocks empty URI, warns on obviously invalid URI (not http/ipfs/data) per spec scenario 2; surfaces revert/failure (FR-008, FR-010)
-- [ ] T059 [P] [US5] RED tests `frontend/src/sections/MintPanel.test.tsx`: URI input + mint CTA; success shows new tokenId; failure surfaced; disconnected/wrong-network states
+- [X] T057 [P] [US5] RED contract tests in `contracts/test/SolimanWeb3.t.sol`: first `mintNFT` returns id 0 and assigns ownership; sequential ids 1, 2…; `tokenURI(id)` == submitted jsonUri; `_safeMint` behavior: mint to a contract without `onERC721Received` reverts; mint to EOA succeeds (R5 #6)
+- [X] T058 [P] [US5] RED tests `frontend/src/hooks/useMintNft.test.ts`: `validate()` blocks empty URI, warns on obviously invalid URI (not http/ipfs/data) per spec scenario 2; surfaces revert/failure (FR-008, FR-010)
+- [X] T059 [P] [US5] RED tests `frontend/src/sections/MintPanel.test.tsx`: URI input + mint CTA; success shows new tokenId; failure surfaced; disconnected/wrong-network states
 
 ### Implementation for User Story 5
 
-- [ ] T060 [US5] Implement `frontend/src/hooks/useMintNft.ts` depends on T058, T026
-- [ ] T061 [US5] Implement `frontend/src/sections/MintPanel.tsx` → T059 GREEN
-- [ ] T062 [US5] Wire pre-start flow in `frontend/src/App.tsx` (MintPanel → StartPanel handoff: after mint, token id passed into start context) + update `frontend/src/App.test.tsx` integration
+- [X] T060 [US5] Implement `frontend/src/hooks/useMintNft.ts` depends on T058, T026
+- [X] T061 [US5] Implement `frontend/src/sections/MintPanel.tsx` → T059 GREEN
+- [X] T062 [US5] Wire pre-start flow in `frontend/src/App.tsx` (MintPanel → StartPanel handoff: after mint, token id passed into start context) + update `frontend/src/App.test.tsx` integration
 
 **Checkpoint**: All 5 stories independently functional
 

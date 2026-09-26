@@ -21,6 +21,9 @@ vi.mock('./sections/BidForm', () => ({
 vi.mock('./sections/StartPanel', () => ({
   StartPanel: () => <div data-testid="start-panel" />,
 }));
+vi.mock('./sections/MintPanel', () => ({
+  MintPanel: () => <div data-testid="mint-panel" />,
+}));
 vi.mock('./sections/WithdrawPanel', () => ({
   WithdrawPanel: () => <div data-testid="withdraw-panel" />,
 }));
@@ -62,12 +65,13 @@ beforeEach(() => {
 });
 
 describe('App — single-page composition (frontend-ui.md §1, T038/T044)', () => {
-  it('shows the seller start action pre-start — no bid form (matrix §3)', () => {
+  it('shows MintPanel handing off to StartPanel pre-start — no bid form (US5, matrix §3)', () => {
     const { container } = renderWithPhase('NOT_STARTED');
     expect(mountOrder(container)).toEqual([
       'hairline-grid',
       'header',
       'auction-panel',
+      'mint-panel',
       'start-panel',
       'withdraw-panel',
       'activity-log',
