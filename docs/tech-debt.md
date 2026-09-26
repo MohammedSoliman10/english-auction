@@ -1,0 +1,61 @@
+# Known technical debt
+
+Recorded per constitution V (Documentation / Tech Debt). Each entry: what is
+deferred, why it is acceptable now, and the upgrade path.
+
+## 1. Playwright e2e suite deferred (research R6)
+
+**What**: there is no committed end-to-end browser test suite in CI. Primary
+flows are instead validated by:
+
+- component/hook tests (217 frontend tests — phase matrix, validation guards,
+  tx lifecycle, error catalogue) with a mocked wagmi wallet, and
+- the scripted `quickstart.md` V1–V9 walkthroughs executed headlessly against
+  the real build + real chain (lifecycle, refunds, settle, zero-bid, failure
+  injection, 360 px responsive audit).
+
+**Why acceptable**: full wallet-orchestrated e2e is brittle and heavy (R6 —
+alternatives considered and consciously deferred); the constitution's coverage
+gates are met per package, and the quickstart runners exercise the production
+bundle end-to-end when a change needs it.
+
+**Upgrade path**: port the quickstart runner flows (wallet-shim + assertions)
+into a committed Playwright suite run by CI.
+
+## 2. Backend bootstrap block not unit-covered
+
+**What**: `backend/src/server.ts`'s `require.main === module` block (load
+`.env`, `listen`) is outside unit coverage — it can only run in a separate
+process, which v8 coverage does not attribute. Backend sits at ~95.6 % lines /
+96.7 % branches (thresholds enforced), just above the constitution floor.
+
+**Why acceptable**: the block is trivial glue that is exercised by every
+`npm run dev` / `npm start` and by the live quickstart runs.
+
+**Upgrade path**: spawn-based smoke test asserting the `backend listening`
+stdout line (behavioral, still not coverage-attributed) — or fold the block
+into an exported `startServer()` and call it from a test with a stubbed
+listener.
+
+## 3. Vercel serverless adaptation (pending deploy, T069)
+
+**What**: the Express app assumes a long-lived Node process (static SPA +
+`/rpc` proxy to a localhost-bound anvil). Deploying to Vercel needs a
+serverless split (API function for `/api/*`, rewrite for `/rpc` to a real RPC
+URL, addresses as env vars).
+
+**Why deferred**: deployment is the endgame step; the wallet key and RPC URL
+are user-provisioned at that point (FR-013/FR-014). Tracked in the README
+“Deployment target” section.
+
+## 4. Quickstart runners are environment-local
+
+**What**: the V1–V9 runner scripts used for live validation live outside the
+repository (they hard-code local tooling paths such as the headless Chromium
+install).
+
+**Why acceptable**: they are validation instruments, not product code; results
+are recorded in commit messages per T068, and the human-readable procedure is
+`specs/001-auction-web-ui/quickstart.md`.
+
+**Upgrade path**: same as item 1 — a committed e2e suite absorbs them.

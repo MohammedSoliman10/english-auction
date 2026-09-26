@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # T024 — hosted demo chain: Anvil (chainId 2026) with state persistence.
-# Research R3: state dumps on stop (via anvil_setIntervalMining? no — handled by
-# trap + anvil's own dump), loads on boot so redeploys survive restarts.
+# Research R3: anvil dumps on exit via its own --dump-state flag (a shell
+# EXIT trap cannot be used here — `exec` replaces the shell and would destroy
+# it, T067 review), and loads on boot so redeploys survive restarts.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STATE_FILE="${ANVIL_STATE_FILE:-$ROOT/.anvil/state.json}"
@@ -17,6 +18,7 @@ ARGS=(
   --chain-id "$CHAIN_ID"
   --accounts 10
   --balance 10000
+  --dump-state "$STATE_FILE"
 )
 
 if [[ -f "$STATE_FILE" ]]; then
@@ -27,6 +29,4 @@ else
 fi
 
 echo "start-chain: anvil on http://$HOST:$PORT (chainId $CHAIN_ID) — Ctrl-C to stop"
-# shellcheck disable=SC2064
-trap "anvil dump-state $STATE_FILE >/dev/null 2>&1 || true" EXIT
 exec anvil "${ARGS[@]}"
