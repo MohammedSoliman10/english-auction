@@ -23,6 +23,14 @@ const GENERIC = 'Transaction could not be completed — try again.';
 export const NOT_CONNECTED_MESSAGE = 'Connect a wallet to continue.';
 
 /**
+ * US3 pre-check (data-model §7 client pre-check row, FR-004): withdraw is
+ * blocked before any wallet prompt when the claim is zero — the contract's
+ * withdraw() itself is unguarded, so the UI is where "nothing to withdraw"
+ * is enforced (spec US3 scenario 2).
+ */
+export const NOTHING_TO_WITHDRAW_MESSAGE = 'Nothing to withdraw';
+
+/**
  * US2 escrow prerequisite (spec §7 open-question resolution): the seller
  * must still own the auctioned NFT before approve/start can be prompted.
  */

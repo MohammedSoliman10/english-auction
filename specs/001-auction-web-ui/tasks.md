@@ -137,14 +137,14 @@ phase = OPEN_FOR_BIDS with running countdown; non-seller/double-start blocked (q
 
 ### Tests for User Story 3 ⚠️ (write FIRST — must fail)
 
-- [ ] T045 [P] [US3] RED contract tests for `withdraw()` in `contracts/test/EnglishAuction.t.sol`: claims exact `bids[caller]`; balance zeroed before transfer (CEI — read `bids` during a reentering receiver attempt via test contract); emits `Withdraw(bidder, amount)`; second withdraw transfers 0 without revert; outbid flow: bid A → bid B → A withdraw == A's bid
-- [ ] T046 [P] [US3] RED tests `frontend/src/hooks/useWithdrawFunds.test.ts`: `validate()` blocks zero claim ("Nothing to withdraw") and not-connected (US3 scenario 2); success resets readout (scenario 1); rejected tx → neutral notice, balance unchanged (scenario 3)
+- [X] T045 [P] [US3] RED contract tests for `withdraw()` in `contracts/test/EnglishAuction.t.sol`: claims exact `bids[caller]`; balance zeroed before transfer (CEI — read `bids` during a reentering receiver attempt via test contract); emits `Withdraw(bidder, amount)`; second withdraw transfers 0 without revert; outbid flow: bid A → bid B → A withdraw == A's bid
+- [X] T046 [P] [US3] RED tests `frontend/src/hooks/useWithdrawFunds.test.ts`: `validate()` blocks zero claim ("Nothing to withdraw") and not-connected (US3 scenario 2); success resets readout (scenario 1); rejected tx → neutral notice, balance unchanged (scenario 3)
 
 ### Implementation for User Story 3
 
-- [ ] T047 [US3] Implement `frontend/src/hooks/useWithdrawFunds.ts` depends on T046, T026
-- [ ] T048 [P] [US3] RED tests `frontend/src/sections/WithdrawPanel.test.tsx`: claimable readout >0 shows CTA; hidden/disabled at 0; post-withdraw reset
-- [ ] T049 [US3] Implement `frontend/src/sections/WithdrawPanel.tsx` → T048 GREEN
+- [X] T047 [US3] Implement `frontend/src/hooks/useWithdrawFunds.ts` depends on T046, T026
+- [X] T048 [P] [US3] RED tests `frontend/src/sections/WithdrawPanel.test.tsx`: claimable readout >0 shows CTA; hidden/disabled at 0; post-withdraw reset
+- [X] T049 [US3] Implement `frontend/src/sections/WithdrawPanel.tsx` → T048 GREEN
 
 **Checkpoint**: US3 independent — refunds work; US1+US3 together form the full bidder loop
 

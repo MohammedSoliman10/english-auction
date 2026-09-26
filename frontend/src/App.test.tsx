@@ -21,6 +21,9 @@ vi.mock('./sections/BidForm', () => ({
 vi.mock('./sections/StartPanel', () => ({
   StartPanel: () => <div data-testid="start-panel" />,
 }));
+vi.mock('./sections/WithdrawPanel', () => ({
+  WithdrawPanel: () => <div data-testid="withdraw-panel" />,
+}));
 vi.mock('./sections/ActivityLog', () => ({
   ActivityLog: () => <div data-testid="activity-log" />,
 }));
@@ -60,6 +63,7 @@ describe('App — single-page composition (frontend-ui.md §1, T038/T044)', () =
       'header',
       'auction-panel',
       'start-panel',
+      'withdraw-panel',
       'activity-log',
       'tx-toast',
     ]);
@@ -72,6 +76,7 @@ describe('App — single-page composition (frontend-ui.md §1, T038/T044)', () =
       'header',
       'auction-panel',
       'bid-form',
+      'withdraw-panel',
       'activity-log',
       'tx-toast',
     ]);
@@ -87,6 +92,9 @@ describe('App — single-page composition (frontend-ui.md §1, T038/T044)', () =
         'hairline-grid',
         'header',
         'auction-panel',
+        // secondary refund area stays in every phase (FR-005 — it self-gates
+        // on myRefundable > 0, panel-level tests cover the hiding)
+        'withdraw-panel',
         'activity-log',
         'tx-toast',
       ]);

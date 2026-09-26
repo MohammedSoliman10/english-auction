@@ -202,4 +202,102 @@ contract EnglishAuctionTest is Test {
         vm.prank(seller);
         auction.start();
     }
+
+    // ── T045 (US3): withdraw() ──────────────────────────────────────────────
+
+    /// Reentrancy observation: bids[address(this)] as seen *during* the value
+    /// transfer, plus what a nested withdraw() drained (both must be zero —
+    /// checks-effects-interactions holds even against a reentering receiver).
+    uint256 internal innerObserved = type(uint256).max;
+    uint256 internal nestedGain = type(uint256).max;
+    bool internal attacking;
+
+    /// The test contract acts as a bidder whose receiver reenters withdraw().
+    receive() external payable {
+        if (!attacking) return;
+        attacking = false;
+        innerObserved = auction.bids(address(this));
+        uint256 balBefore = address(this).balance;
+        auction.withdraw(); // nested attempt — credit already zeroed
+        nestedGain = address(this).balance - balBefore;
+    }
+
+    /// Outbid helper: alice leads, bob takes over → alice holds a credit.
+    function _outbidAlice(uint256 aliceBid, uint256 bobBid) internal {
+        _startAuction();
+        vm.deal(alice, 1 ether);
+        vm.deal(bob, 1 ether);
+        vm.prank(alice);
+        auction.bid{value: aliceBid}();
+        vm.prank(bob);
+        auction.bid{value: bobBid}();
+    }
+
+    function test_WithdrawClaimsExactCredit() public {
+        _outbidAlice(0.2 ether, 0.3 ether);
+        assertEq(auction.bids(alice), 0.2 ether, "credit before withdraw");
+
+        uint256 before = alice.balance;
+        uint256 contractBefore = address(auction).balance;
+        vm.prank(alice);
+        auction.withdraw();
+
+        assertEq(alice.balance - before, 0.2 ether, "exact bids[caller] returned");
+        assertEq(contractBefore - address(auction).balance, 0.2 ether, "contract paid out");
+        assertEq(auction.bids(alice), 0, "credit zeroed after withdraw");
+    }
+
+    function test_WithdrawZeroesCreditBeforeTransfer_CEI() public {
+        _startAuction();
+        vm.deal(address(this), 2 ether);
+        auction.bid{value: 0.2 ether}();
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        auction.bid{value: 0.3 ether}(); // test contract now holds the credit
+
+        uint256 before = address(this).balance;
+        attacking = true;
+        auction.withdraw();
+        attacking = false;
+
+        assertEq(innerObserved, 0, "CEI: bids[caller] zeroed before transfer");
+        assertEq(nestedGain, 0, "reentrant withdraw drains nothing extra");
+        assertEq(address(this).balance - before, 0.2 ether, "exact credit transferred");
+    }
+
+    function test_EmitWithdrawWithCreditAmount() public {
+        _outbidAlice(0.2 ether, 0.3 ether);
+
+        vm.expectEmit(true, false, false, true, address(auction));
+        emit EnglishAuction.Withdraw(alice, 0.2 ether);
+        vm.prank(alice);
+        auction.withdraw();
+    }
+
+    function test_SecondWithdrawPaysZeroWithoutRevert() public {
+        _outbidAlice(0.2 ether, 0.3 ether);
+        vm.prank(alice);
+        auction.withdraw();
+
+        uint256 before = alice.balance;
+        vm.expectEmit(true, false, false, true, address(auction));
+        emit EnglishAuction.Withdraw(alice, 0);
+        vm.prank(alice);
+        auction.withdraw();
+
+        assertEq(alice.balance, before, "second withdraw transfers 0 without revert");
+    }
+
+    function test_OutbidFlow_AWithdrawsExactlyOwnBid() public {
+        _outbidAlice(0.2 ether, 0.3 ether);
+
+        uint256 before = alice.balance;
+        vm.prank(alice);
+        auction.withdraw();
+
+        assertEq(alice.balance - before, 0.2 ether, "A withdraws exactly A's bid");
+        assertEq(auction.highestBid(), 0.3 ether, "highest bid untouched");
+        assertEq(auction.highestBidder(), bob, "highest bidder untouched");
+        assertEq(address(auction).balance, 0.3 ether, "contract retains only current highest");
+    }
 }
