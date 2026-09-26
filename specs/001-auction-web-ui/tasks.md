@@ -205,7 +205,7 @@ empty/invalid URI warned (quickstart V2)
 - [X] T065 [P] Connection/error states (tests first → impl): `chain_unreachable` (502) and `not_deployed` (503) Caliper-styled views in `frontend/src/sections/ErrorState.tsx` + boot wiring in `frontend/src/App.tsx` (spec edge cases, SC-005)
 - [X] T066 Verify/raise coverage ≥95% lines / ≥90% branches all three packages (`forge coverage`, `vitest --coverage`); close gaps with RED-first tests (constitution III)
 - [X] T067 Documentation sync per constitution V: root `README.md` (run/deploy/validation), NatSpec final review in `contracts/src/*.sol`, record known debt — Playwright e2e deferral (research R6) — in `docs/tech-debt.md`
-- [ ] T068 Execute `specs/001-auction-web-ui/quickstart.md` scenarios V1–V9 end-to-end; fix any failure test-first (RED regression test → fix → GREEN); note results in PR/commit message
+- [X] T068 Execute `specs/001-auction-web-ui/quickstart.md` scenarios V1–V9 end-to-end; fix any failure test-first (RED regression test → fix → GREEN); note results in PR/commit message
 - [ ] T069 Remote production validation (FR-013): execute the quickstart "Production Deployment" section on a real host (anvil + deploy + `npm run build`/`npm start` behind HTTPS reverse proxy) and re-verify V1, V4, and V8 against the public origin — wallet add-network flow must work with `https://<host>/rpc`; if no host is available yet, mark BLOCKED in the task and record it in `docs/tech-debt.md` (do not silently skip)
 - [ ] T070 Run full `./scripts/check.sh` gate green (fmt + lint + build + all tests + coverage + palette grep + bundle budget) and commit final state on branch `001-auction-web-ui`
 

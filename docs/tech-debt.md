@@ -22,6 +22,13 @@ bundle end-to-end when a change needs it.
 **Upgrade path**: port the quickstart runner flows (wallet-shim + assertions)
 into a committed Playwright suite run by CI.
 
+**Cross-browser note (V9)**: the quickstart's “latest Chrome/Firefox/Safari
+smoke pass” was executed against **Chromium only** — the validation
+environment provides headless Chromium and no Firefox/Safari binaries.
+Responsive behavior is browser-standard CSS (no vendor-specific code), so
+the risk is low, but the two extra engines remain unverified until CI gains
+them.
+
 ## 2. Backend bootstrap block not unit-covered
 
 **What**: `backend/src/server.ts`'s `require.main === module` block (load
