@@ -33,3 +33,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.tsbuildinfo
+
+# forge doc output
+contracts/docs/
