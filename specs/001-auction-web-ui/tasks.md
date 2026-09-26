@@ -160,16 +160,16 @@ winner+amount or "NO BIDS"; early/double settle blocked (quickstart V6, V7)
 
 ### Tests for User Story 4 ⚠️ (write FIRST — must fail)
 
-- [ ] T050 [P] [US4] RED contract tests for `end()` in `contracts/test/EnglishAuction.t.sol`: reverts `"not started"`, `"not ended"` (before endAt), `"ended"` (double); with bids → NFT to `highestBidder`, seller balance += exactly `highestBid`; zero bids → NFT back to seller, seller receives 0; emits `End(winner, amount)`; seller-payout revert message `"transfer failed"` (typo fixed, R5 #5)
-- [ ] T051 [P] [US4] RED timing-boundary tests in `contracts/test/EnglishAuction.t.sol` (or fuzz durations 1s…31_536_000s): bid rejected at `endAt`, settle rejected at `endAt−1`, both settle allowed at `endAt` and `endAt+1`
-- [ ] T052 [P] [US4] RED invariant suite `contracts/test/EnglishAuction.invariant.t.sol` + handler contract: (1) solvency `address(auction).balance == Σ bids + (live ? highestBid : 0)`; (2) escrow conservation auction owns ≤1 token; (3) terminal immutability `ended ⇒` no state transitions reachable
-- [ ] T053 [P] [US4] RED tests `frontend/src/hooks/useSettleAuction.test.ts`: `validate()` — before endAt blocked ("still in progress"), already ended blocked, not-started blocked, otherwise ok (US4 scenarios 3–4); phase matrix AWAITING_SETTLEMENT → SETTLED
+- [X] T050 [P] [US4] RED contract tests for `end()` in `contracts/test/EnglishAuction.t.sol`: reverts `"not started"`, `"not ended"` (before endAt), `"ended"` (double); with bids → NFT to `highestBidder`, seller balance += exactly `highestBid`; zero bids → NFT back to seller, seller receives 0; emits `End(winner, amount)`; seller-payout revert message `"transfer failed"` (typo fixed, R5 #5)
+- [X] T051 [P] [US4] RED timing-boundary tests in `contracts/test/EnglishAuction.t.sol` (or fuzz durations 1s…31_536_000s): bid rejected at `endAt`, settle rejected at `endAt−1`, both settle allowed at `endAt` and `endAt+1`
+- [X] T052 [P] [US4] RED invariant suite `contracts/test/EnglishAuction.invariant.t.sol` + handler contract: (1) solvency `address(auction).balance == Σ bids + (live ? highestBid : 0)`; (2) escrow conservation auction owns ≤1 token; (3) terminal immutability `ended ⇒` no state transitions reachable
+- [X] T053 [P] [US4] RED tests `frontend/src/hooks/useSettleAuction.test.ts`: `validate()` — before endAt blocked ("still in progress"), already ended blocked, not-started blocked, otherwise ok (US4 scenarios 3–4); phase matrix AWAITING_SETTLEMENT → SETTLED
 
 ### Implementation for User Story 4
 
-- [ ] T054 [US4] Implement `frontend/src/hooks/useSettleAuction.ts` depends on T053, T026
-- [ ] T055 [P] [US4] RED tests `frontend/src/sections/SettlePanel.test.tsx` + `frontend/src/sections/ResultPanel.test.tsx`: settle CTA only in AWAITING_SETTLEMENT; ResultPanel shows winner + amount / "NO BIDS" (scenario 2)
-- [ ] T056 [US4] Implement `frontend/src/sections/SettlePanel.tsx` + `frontend/src/sections/ResultPanel.tsx` → T055 GREEN
+- [X] T054 [US4] Implement `frontend/src/hooks/useSettleAuction.ts` depends on T053, T026
+- [X] T055 [P] [US4] RED tests `frontend/src/sections/SettlePanel.test.tsx` + `frontend/src/sections/ResultPanel.test.tsx`: settle CTA only in AWAITING_SETTLEMENT; ResultPanel shows winner + amount / "NO BIDS" (scenario 2)
+- [X] T056 [US4] Implement `frontend/src/sections/SettlePanel.tsx` + `frontend/src/sections/ResultPanel.tsx` → T055 GREEN
 
 **Checkpoint**: US4 independent — full auction lifecycle closes on-chain + on-screen
 

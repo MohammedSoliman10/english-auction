@@ -31,6 +31,12 @@ export const NOT_CONNECTED_MESSAGE = 'Connect a wallet to continue.';
 export const NOTHING_TO_WITHDRAW_MESSAGE = 'Nothing to withdraw';
 
 /**
+ * US4 pre-check (matrix §3 SETTLED row): `end()` is terminal — a second
+ * settle attempt is blocked before any wallet prompt.
+ */
+export const ALREADY_SETTLED_MESSAGE = 'Auction already settled';
+
+/**
  * US2 escrow prerequisite (spec §7 open-question resolution): the seller
  * must still own the auctioned NFT before approve/start can be prompted.
  */

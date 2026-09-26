@@ -80,4 +80,49 @@ contract EnglishAuctionFuzzTest is Test {
         uint256 count = bound(bidCount, 1, 12);
         return who[bound(uint256(keccak256(abi.encode(seed, count - 1))), 0, 2)];
     }
+
+    // ── T051 (US4): timing boundaries hold for any duration 1s … 1 year ────
+
+    /// @dev Deploy a second auction over a fresh token (setUp already escrowed #1). */
+    function _boundaryAuction(uint256 duration) internal returns (EnglishAuction a) {
+        vm.prank(seller);
+        nft.mint(seller, 99);
+        vm.prank(seller);
+        a = new EnglishAuction(address(nft), 99, START_BID, duration);
+        vm.startPrank(seller);
+        nft.approve(address(a), 99);
+        a.start();
+        vm.stopPrank();
+    }
+
+    /// @notice endAt−1: settle blocked + bidding open; endAt: bidding closed + settle allowed. */
+    function testFuzz_EndAtBoundaryHoldsForAnyDuration(uint64 rawDuration) public {
+        uint256 duration = bound(rawDuration, 1, 31_536_000);
+        EnglishAuction a = _boundaryAuction(duration);
+        uint256 endAt = a.endAt();
+        vm.deal(bidder1, 10 ether);
+
+        vm.warp(endAt - 1);
+        vm.expectRevert("not ended");
+        a.end();
+        vm.prank(bidder1);
+        a.bid{value: START_BID + 0.1 ether}();
+
+        vm.warp(endAt);
+        vm.prank(bidder1);
+        vm.expectRevert("ended");
+        a.bid{value: 1 ether}();
+        a.end();
+        assertTrue(a.ended(), "settled exactly at endAt for any duration");
+    }
+
+    /// @notice endAt+1: settle still allowed (permissionless catch-up). */
+    function testFuzz_SettleAllowedAfterEndAtForAnyDuration(uint64 rawDuration) public {
+        uint256 duration = bound(rawDuration, 1, 31_536_000);
+        EnglishAuction a = _boundaryAuction(duration);
+
+        vm.warp(a.endAt() + 1);
+        a.end();
+        assertTrue(a.ended(), "settled at endAt+1 for any duration");
+    }
 }

@@ -6,6 +6,8 @@ import { ActivityLog } from './sections/ActivityLog';
 import { AuctionPanel } from './sections/AuctionPanel';
 import { BidForm } from './sections/BidForm';
 import { Header } from './sections/Header';
+import { ResultPanel } from './sections/ResultPanel';
+import { SettlePanel } from './sections/SettlePanel';
 import { StartPanel } from './sections/StartPanel';
 import { WithdrawPanel } from './sections/WithdrawPanel';
 
@@ -13,9 +15,8 @@ import { WithdrawPanel } from './sections/WithdrawPanel';
  * Single-page auction composition (frontend-ui.md §1).
  *
  * Phase-exclusive action areas (FR-004 — one primary action at a time):
- *   NOT_STARTED → <StartPanel>   OPEN_FOR_BIDS → <BidForm>
- *   AWAITING_SETTLEMENT / SETTLED → none yet (US4 mounts SettlePanel /
- *   ResultPanel in the same slot).
+ *   NOT_STARTED → <StartPanel>        OPEN_FOR_BIDS → <BidForm>
+ *   AWAITING_SETTLEMENT → <SettlePanel>   SETTLED → <ResultPanel>
  * <WithdrawPanel> is the secondary area: it self-gates on myRefundable > 0
  * and stays mounted in every phase — a credit is claimable at any time
  * after being outbid (FR-005).
@@ -34,6 +35,8 @@ export function AuctionPage() {
         <AuctionPanel />
         {phase === 'NOT_STARTED' ? <StartPanel /> : null}
         {phase === 'OPEN_FOR_BIDS' ? <BidForm /> : null}
+        {phase === 'AWAITING_SETTLEMENT' ? <SettlePanel /> : null}
+        {phase === 'SETTLED' ? <ResultPanel /> : null}
         <WithdrawPanel />
         <ActivityLog />
       </main>

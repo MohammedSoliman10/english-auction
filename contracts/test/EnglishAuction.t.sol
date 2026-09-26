@@ -300,4 +300,155 @@ contract EnglishAuctionTest is Test {
         assertEq(auction.highestBidder(), bob, "highest bidder untouched");
         assertEq(address(auction).balance, 0.3 ether, "contract retains only current highest");
     }
+
+    // ── T050 (US4): end() ──────────────────────────────────────────────────
+
+    function test_RevertWhen_EndBeforeStart() public {
+        vm.expectRevert("not started");
+        auction.end();
+    }
+
+    function test_RevertWhen_EndBeforeEndAt() public {
+        _startAuction();
+        vm.warp(auction.endAt() - 1); // endAt − 1
+        vm.expectRevert("not ended");
+        auction.end();
+    }
+
+    function test_RevertWhen_DoubleEnd() public {
+        _startAuction();
+        vm.warp(auction.endAt());
+        auction.end();
+        vm.expectRevert("ended");
+        auction.end();
+    }
+
+    function test_EndWithBidsAwardsNftToWinnerAndPaysSeller() public {
+        _outbidAlice(0.2 ether, 0.3 ether); // alice credited 0.2, bob leads with 0.3
+        uint256 sellerBefore = seller.balance;
+        vm.warp(auction.endAt());
+
+        auction.end();
+
+        assertEq(nft.ownerOf(TOKEN_ID), bob, "NFT to highest bidder");
+        assertEq(seller.balance - sellerBefore, 0.3 ether, "seller paid exactly highestBid");
+        assertTrue(auction.ended(), "terminal flag set");
+        assertEq(address(auction).balance, 0.2 ether, "only refundable credit remains");
+    }
+
+    function test_EndWithZeroBidsReturnsNftToSeller() public {
+        _startAuction();
+        uint256 sellerBefore = seller.balance;
+        vm.warp(auction.endAt());
+
+        auction.end();
+
+        assertEq(nft.ownerOf(TOKEN_ID), seller, "NFT back to seller");
+        assertEq(seller.balance, sellerBefore, "seller receives 0");
+        assertEq(auction.highestBidder(), address(0), "no winner recorded");
+        assertEq(address(auction).balance, 0, "no funds held");
+    }
+
+    function test_EmitEndWithWinnerAndAmount() public {
+        _outbidAlice(0.2 ether, 0.3 ether);
+        vm.warp(auction.endAt());
+
+        // End(winner, amount) has no indexed fields — compare data only.
+        vm.expectEmit(false, false, false, true, address(auction));
+        emit EnglishAuction.End(bob, 0.3 ether);
+        auction.end();
+    }
+
+    function test_EmitEndWithZeroWhenNoBids() public {
+        _startAuction();
+        vm.warp(auction.endAt());
+
+        // Characterization: with no bids the event carries the starting-bid
+        // floor (storage high-water mark), winner = zero address. Consumers
+        // key "NO BIDS" on winner == 0, never on amount (US4 scenario 2).
+        vm.expectEmit(false, false, false, true, address(auction));
+        emit EnglishAuction.End(address(0), START_BID);
+        auction.end();
+    }
+
+    function test_RevertWhen_EndSellerPayoutFails() public {
+        // Seller that refuses ETH → payout call fails → require message
+        // ("transfer failed" — R5 #5 typo fixed in source, catalogue keeps both).
+        RejectingSeller rejector = new RejectingSeller(nft, 7, START_BID, DURATION);
+        rejector.approveAndStart();
+        EnglishAuction rejectorAuction = rejector.auction();
+        vm.deal(alice, 1 ether);
+        vm.prank(alice);
+        rejectorAuction.bid{value: 1 ether}();
+
+        vm.warp(rejectorAuction.endAt());
+        vm.expectRevert(bytes("transfer failed"));
+        rejectorAuction.end();
+    }
+
+    // ── T051 (US4): timing boundaries (fuzz variants in EnglishAuction.fuzz.t.sol)
+
+    function test_BidRejectedAtEndAt() public {
+        _startAuction();
+        vm.deal(alice, 1 ether);
+        vm.warp(auction.endAt()); // bidding window is [start, endAt)
+        vm.prank(alice);
+        vm.expectRevert("ended");
+        auction.bid{value: 1 ether}();
+    }
+
+    function test_BidAllowedAtEndAtMinusOne() public {
+        _startAuction();
+        vm.deal(alice, 1 ether);
+        vm.warp(auction.endAt() - 1);
+        vm.prank(alice);
+        auction.bid{value: 1 ether}();
+        assertEq(auction.highestBid(), 1 ether, "last-second bid accepted");
+    }
+
+    function test_SettleRejectedAtEndAtMinusOne() public {
+        _startAuction();
+        vm.warp(auction.endAt() - 1);
+        vm.expectRevert("not ended");
+        auction.end();
+    }
+
+    function test_SettleAllowedAtEndAt() public {
+        _startAuction();
+        vm.warp(auction.endAt());
+        auction.end();
+        assertTrue(auction.ended(), "settled exactly at endAt");
+    }
+
+    function test_SettleAllowedAtEndAtPlusOne() public {
+        _startAuction();
+        vm.warp(auction.endAt() + 1);
+        auction.end();
+        assertTrue(auction.ended(), "settled after endAt");
+    }
+}
+
+/// @dev Seller that rejects ETH — exercises end()'s payout failure message
+///      (R5 #5: source string is "transfer failed", catalogue maps both
+///      spellings). Deploys its own auction over a freshly minted token.
+contract RejectingSeller {
+    EnglishAuction public auction;
+    MockERC721 public immutable nft;
+    uint256 public immutable tokenId;
+
+    constructor(MockERC721 nft_, uint256 tokenId_, uint256 startBid, uint256 duration) {
+        nft = nft_;
+        tokenId = tokenId_;
+        nft_.mint(address(this), tokenId_);
+        auction = new EnglishAuction(address(nft_), tokenId_, startBid, duration);
+    }
+
+    function approveAndStart() external {
+        nft.approve(address(auction), tokenId);
+        auction.start();
+    }
+
+    receive() external payable {
+        revert("no eth");
+    }
 }

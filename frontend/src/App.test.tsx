@@ -24,6 +24,12 @@ vi.mock('./sections/StartPanel', () => ({
 vi.mock('./sections/WithdrawPanel', () => ({
   WithdrawPanel: () => <div data-testid="withdraw-panel" />,
 }));
+vi.mock('./sections/SettlePanel', () => ({
+  SettlePanel: () => <div data-testid="settle-panel" />,
+}));
+vi.mock('./sections/ResultPanel', () => ({
+  ResultPanel: () => <div data-testid="result-panel" />,
+}));
 vi.mock('./sections/ActivityLog', () => ({
   ActivityLog: () => <div data-testid="activity-log" />,
 }));
@@ -82,23 +88,38 @@ describe('App — single-page composition (frontend-ui.md §1, T038/T044)', () =
     ]);
   });
 
-  it('offers no primary action while awaiting settlement / settled', () => {
-    for (const phase of ['AWAITING_SETTLEMENT', 'SETTLED']) {
-      const { container, unmount } = renderWithPhase(phase);
-      const order = mountOrder(container);
+  it('swaps in SettlePanel at AWAITING_SETTLEMENT and ResultPanel at SETTLED (matrix §3)', () => {
+    const { container: awaiting, unmount: u1 } = renderWithPhase('AWAITING_SETTLEMENT');
+    const awaitingOrder = mountOrder(awaiting);
+    u1();
+
+    const { container: settled, unmount: u2 } = renderWithPhase('SETTLED');
+    const settledOrder = mountOrder(settled);
+    u2();
+
+    expect(awaitingOrder).toEqual([
+      'hairline-grid',
+      'header',
+      'auction-panel',
+      'settle-panel',
+      'withdraw-panel',
+      'activity-log',
+      'tx-toast',
+    ]);
+    expect(settledOrder).toEqual([
+      'hairline-grid',
+      'header',
+      'auction-panel',
+      'result-panel',
+      'withdraw-panel',
+      'activity-log',
+      'tx-toast',
+    ]);
+
+    // never a competing primary action in either terminal phase
+    for (const order of [awaitingOrder, settledOrder]) {
       expect(order).not.toContain('bid-form');
       expect(order).not.toContain('start-panel');
-      expect(order).toEqual([
-        'hairline-grid',
-        'header',
-        'auction-panel',
-        // secondary refund area stays in every phase (FR-005 — it self-gates
-        // on myRefundable > 0, panel-level tests cover the hiding)
-        'withdraw-panel',
-        'activity-log',
-        'tx-toast',
-      ]);
-      unmount();
     }
   });
 

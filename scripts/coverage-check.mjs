@@ -17,7 +17,17 @@ let lf = 0,
   lh = 0,
   brf = 0,
   brh = 0;
+// Scope: production sources only (`SF:src/**`). forge coverage also reports
+// the deploy script and test helpers — those are not unit-test targets and
+// must not pad (or skew) the constitution III gate. The label has always
+// said "contracts/src coverage"; this makes the math match it.
+let inScope = false;
 for (const line of raw.split('\n')) {
+  if (line.startsWith('SF:')) {
+    inScope = /^SF:(?:.*\/)?src\//.test(line);
+    continue;
+  }
+  if (!inScope) continue;
   if (line.startsWith('LF:')) lf += Number(line.slice(3));
   else if (line.startsWith('LH:')) lh += Number(line.slice(3));
   else if (line.startsWith('BRF:')) brf += Number(line.slice(4));
