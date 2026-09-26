@@ -11,6 +11,7 @@ import { ResultPanel } from './sections/ResultPanel';
 import { SettlePanel } from './sections/SettlePanel';
 import { StartPanel } from './sections/StartPanel';
 import { WithdrawPanel } from './sections/WithdrawPanel';
+import { ErrorState } from './sections/ErrorState';
 
 /**
  * Single-page auction composition (frontend-ui.md §1).
@@ -29,7 +30,14 @@ import { WithdrawPanel } from './sections/WithdrawPanel';
  */
 export function AuctionPage() {
   const store = useTxStore();
-  const { phase } = useAuctionState();
+  const { phase, error } = useAuctionState();
+
+  // T065 / data-model §1 — any read failure collapses to the single
+  // chain_unreachable page: no blank or half-broken panels next to a dead
+  // chain. Polling keeps running, so a recovered chain (or a reload)
+  // restores the full page (spec edge case, quickstart V8 step 14).
+  if (error === 'chain_unreachable') return <ErrorState kind="chain_unreachable" />;
+
   const tx = store?.tx ?? { status: 'idle' as const };
   const onDismiss = store?.reset ?? ((): void => undefined);
 

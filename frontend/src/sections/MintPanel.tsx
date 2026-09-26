@@ -61,7 +61,7 @@ export function MintPanel() {
             setUri(event.target.value);
             if (message !== null) setMessage(null);
           }}
-          className="border border-surface-3 bg-surface-2 px-3 py-2 font-mono text-sm text-paper placeholder:text-signal focus:border-white focus:outline-none disabled:opacity-50"
+          className="border border-surface-3 bg-surface-2 px-3 py-2 font-mono text-sm text-paper placeholder:text-signal focus:border-white disabled:opacity-50"
         />
       </div>
 

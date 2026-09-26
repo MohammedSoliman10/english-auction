@@ -200,9 +200,9 @@ empty/invalid URI warned (quickstart V2)
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T063 [P] Responsive + a11y pass across `frontend/src/sections/` and `frontend/src/components/`: 360px width no horizontal scroll, focus rings `--color-white`, contrast ≥14:1 paper-on-void; update tests (FR-012, SC-007)
+- [X] T063 [P] Responsive + a11y pass across `frontend/src/sections/` and `frontend/src/components/`: 360px width no horizontal scroll, focus rings `--color-white`, contrast ≥14:1 paper-on-void; update tests (FR-012, SC-007)
 - [X] T064 [P] Add quality gates to `scripts/check.sh`: SC-004 palette gate (fail on any hex/rgb/hsl/oklch literal in `frontend/src` outside `frontend/src/styles/caliper.css`) AND SC-006 bundle budget (fail if initial JS+CSS from `vite build` exceeds 300 KB gzip)
-- [ ] T065 [P] Connection/error states (tests first → impl): `chain_unreachable` (502) and `not_deployed` (503) Caliper-styled views in `frontend/src/sections/ErrorState.tsx` + boot wiring in `frontend/src/App.tsx` (spec edge cases, SC-005)
+- [X] T065 [P] Connection/error states (tests first → impl): `chain_unreachable` (502) and `not_deployed` (503) Caliper-styled views in `frontend/src/sections/ErrorState.tsx` + boot wiring in `frontend/src/App.tsx` (spec edge cases, SC-005)
 - [ ] T066 Verify/raise coverage ≥95% lines / ≥90% branches all three packages (`forge coverage`, `vitest --coverage`); close gaps with RED-first tests (constitution III)
 - [ ] T067 Documentation sync per constitution V: root `README.md` (run/deploy/validation), NatSpec final review in `contracts/src/*.sol`, record known debt — Playwright e2e deferral (research R6) — in `docs/tech-debt.md`
 - [ ] T068 Execute `specs/001-auction-web-ui/quickstart.md` scenarios V1–V9 end-to-end; fix any failure test-first (RED regression test → fix → GREEN); note results in PR/commit message

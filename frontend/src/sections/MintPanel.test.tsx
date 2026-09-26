@@ -113,6 +113,15 @@ describe('MintPanel — US5 (pre-start onboarding, frontend-ui.md §1)', () => {
     expect(screen.queryByText('token id')).not.toBeInTheDocument();
   });
 
+  it('does not suppress the global white focus ring (FR-012)', () => {
+    render(<MintPanel />);
+    const input = screen.getByLabelText(/metadata uri/i);
+    // `outline-none` would override caliper.css `:focus-visible` (higher
+    // specificity) — the input must keep the achromatic focus ring.
+    expect(input.className).not.toMatch(/outline-none/);
+    expect(input.className).toMatch(/focus:border-white/);
+  });
+
   it('disables the CTA while a mint is in flight', () => {
     for (const status of ['awaiting_confirmation', 'pending']) {
       mocks.useMintNft.mockImplementation(() => mintNft({ tx: { status } }));

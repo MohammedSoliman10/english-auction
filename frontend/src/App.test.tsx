@@ -79,6 +79,22 @@ describe('App — single-page composition (frontend-ui.md §1, T038/T044)', () =
     ]);
   });
 
+  it('replaces the whole page with ErrorState when the chain is unreachable (edge case)', () => {
+    mocks.useAuctionState.mockReturnValue({
+      phase: 'OPEN_FOR_BIDS',
+      error: 'chain_unreachable',
+    });
+    const { container } = render(<App />);
+    expect(screen.getByTestId('error-state')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(/chain is unreachable/i);
+    // no blank/broken panels alongside the error
+    const order = mountOrder(container);
+    expect(order).toEqual(['error-state']);
+    expect(screen.queryByTestId('auction-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('bid-form')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('activity-log')).not.toBeInTheDocument();
+  });
+
   it('trades StartPanel for BidForm once bidding opens', () => {
     const { container } = renderWithPhase('OPEN_FOR_BIDS');
     expect(mountOrder(container)).toEqual([

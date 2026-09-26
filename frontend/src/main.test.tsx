@@ -50,6 +50,7 @@ describe('boot sequence (FR-015, contract §6)', () => {
       await renderApp(root);
     });
     expect(screen.getByRole('alert')).toHaveTextContent(/deploy\.sh/);
+    expect(screen.getByText('not deployed')).toBeInTheDocument(); // ErrorState kind label
   });
 
   it('shows a server-unreachable alert when fetch itself fails', async () => {
@@ -59,6 +60,7 @@ describe('boot sequence (FR-015, contract §6)', () => {
       await renderApp(root);
     });
     expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText('connection error')).toBeInTheDocument(); // ErrorState kind label
   });
 
   it('is a no-op when the mount point is missing', async () => {
