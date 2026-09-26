@@ -4,6 +4,8 @@ import { MonoLabel } from './MonoLabel';
 
 interface TxToastProps {
   tx: TxLifecycle;
+  /** Dismiss a finished lifecycle (FR-010) — offered on terminal states only. */
+  onDismiss?: () => void;
 }
 
 const COPY: Record<TxLifecycle['status'], string> = {
@@ -15,12 +17,14 @@ const COPY: Record<TxLifecycle['status'], string> = {
   reverted: 'TRANSACTION REVERTED',
 };
 
+const TERMINAL: ReadonlySet<TxLifecycle['status']> = new Set(['success', 'rejected', 'reverted']);
+
 /**
  * FR-010 write-transaction lifecycle toast:
  * awaiting → pending(hash) → success | reverted | rejected.
  * Achromatic: state conveyed by text, never colored fills.
  */
-export function TxToast({ tx }: TxToastProps) {
+export function TxToast({ tx, onDismiss }: TxToastProps) {
   if (tx.status === 'idle') return null;
   return (
     <div
@@ -45,6 +49,16 @@ export function TxToast({ tx }: TxToastProps) {
           <span className="max-w-64 font-mono text-xs text-paper">{tx.message}</span>
         ) : null}
       </div>
+      {onDismiss && TERMINAL.has(tx.status) ? (
+        <button
+          type="button"
+          aria-label="dismiss"
+          onClick={onDismiss}
+          className="ml-2 border border-surface-3 px-2 py-1 transition-opacity hover:opacity-70"
+        >
+          <MonoLabel className="text-signal">dismiss</MonoLabel>
+        </button>
+      ) : null}
     </div>
   );
 }

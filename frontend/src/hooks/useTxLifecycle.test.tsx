@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
 import { EnglishAuctionAbi } from '../lib/abi/EnglishAuction';
 
 const mocks = vi.hoisted(() => ({
@@ -20,6 +21,8 @@ vi.mock('wagmi', () => ({
 
 import { useTxLifecycle } from './useTxLifecycle';
 import type { TxWriteParams } from './useTxLifecycle';
+import { TxProvider, useTxStore } from '../app/TxProvider';
+import type { TxLifecycle } from '../lib/types';
 
 const HASH = '0x1234567890abcdef1234567890abcdef12345678' as const;
 
@@ -230,5 +233,55 @@ describe('useTxLifecycle (data-model §6, FR-010)', () => {
       await result.current.write(PARAMS);
     });
     expect(result.current.tx.status).toBe('rejected');
+  });
+});
+
+describe('useTxLifecycle ↔ global TxProvider (FR-010 mount, T037)', () => {
+  let published: TxLifecycle | null = null;
+
+  function Capture() {
+    const store = useTxStore();
+    published = store ? store.tx : null;
+    return null;
+  }
+
+  const storeWrapper = ({ children }: { children: ReactNode }) => (
+    <TxProvider>
+      <Capture />
+      {children}
+    </TxProvider>
+  );
+
+  beforeEach(() => {
+    published = null;
+  });
+
+  it('publishes lifecycle transitions to the store (standalone hooks unaffected)', async () => {
+    const { result } = renderHook(() => useTxLifecycle(), { wrapper: storeWrapper });
+    expect(published).toEqual({ status: 'idle' });
+
+    mocks.writeContractAsync.mockRejectedValue(
+      Object.assign(new Error('User rejected the request.'), { code: 4001 }),
+    );
+    await act(async () => {
+      await result.current.write(PARAMS);
+    });
+
+    expect(published?.status).toBe('rejected');
+    expect(published?.message).toBe('Transaction rejected in wallet — no changes were made.');
+  });
+
+  it('propagates reset() back to idle in the store', async () => {
+    const { result } = renderHook(() => useTxLifecycle(), { wrapper: storeWrapper });
+    mocks.writeContractAsync.mockRejectedValue({ code: 4001 });
+    await act(async () => {
+      await result.current.write(PARAMS);
+    });
+    expect(published?.status).toBe('rejected');
+
+    act(() => {
+      result.current.reset();
+    });
+    expect(published?.status).toBe('idle');
   });
 });

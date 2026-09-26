@@ -1,11 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAccount, useChainId, useConnect, useSwitchChain } from 'wagmi';
+import { useAccount, useConnect, useSwitchChain } from 'wagmi';
 
 vi.mock('wagmi', () => ({
   useAccount: vi.fn(),
   useConnect: vi.fn(),
-  useChainId: vi.fn(),
   useSwitchChain: vi.fn(),
 }));
 
@@ -30,13 +29,14 @@ function mockWallet({ connected, chainId }: { connected: boolean; chainId: numbe
   vi.mocked(useAccount).mockReturnValue({
     address: connected ? '0x1234567890abcdef1234567890abcdef12345678' : undefined,
     isConnected: connected,
+    // Real wagmi: the WALLET's chain rides on the account/connection state.
+    chainId: connected ? chainId : undefined,
   } as never);
   vi.mocked(useConnect).mockReturnValue({
     connect,
     connectors: [{ uid: 'injected' }] as never,
     isPending: false,
   } as never);
-  vi.mocked(useChainId).mockReturnValue(chainId);
   vi.mocked(useSwitchChain).mockReturnValue({ switchChainAsync } as never);
 }
 
@@ -74,6 +74,23 @@ describe('Header — wallet connect (FR-001)', () => {
 });
 
 describe('Header — guided network switch (FR-001, V1)', () => {
+  it('reads the wallet network from useAccount — not the app-selected chain', () => {
+    // Real wagmi contract: useChainId() tracks the app-selected chain (the
+    // config default, 2026), while the wallet's ACTUAL chain arrives via
+    // useAccount().chainId. Detection must use the latter, or a wallet on
+    // mainnet would silently look connected to the auction chain (V1).
+    mockWallet({ connected: true, chainId: 2026 });
+    vi.mocked(useAccount).mockReturnValue({
+      address: '0x1234567890abcdef1234567890abcdef12345678',
+      isConnected: true,
+      chainId: 1, // wallet is on Ethereum mainnet
+    } as never);
+
+    renderHeader();
+    expect(screen.getByText(/wrong network/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /switch/i })).toBeInTheDocument();
+  });
+
   it('auto-prompts a switch to chainId 2026 exactly once on wrong network', async () => {
     mockWallet({ connected: true, chainId: 1 });
     renderHeader();

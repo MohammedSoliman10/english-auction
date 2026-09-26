@@ -95,11 +95,11 @@ invalid bids blocked pre-wallet (quickstart V1, V4)
 
 - [X] T032 [US1] Implement `frontend/src/hooks/useAuctionState.ts` (multi-read + poll + event-driven refetch, FR-002/FR-015) depends on T030
 - [X] T033 [US1] Implement `frontend/src/hooks/usePlaceBid.ts` (validation via `lib/errors.ts`, writes via `useTxLifecycle`) depends on T031, T026
-- [ ] T034 [P] [US1] RED tests `frontend/src/sections/AuctionPanel.test.tsx` + `frontend/src/sections/BidForm.test.tsx`: readouts + countdown + gauge render; BidForm disabled states per state→action matrix (frontend-ui.md §3)
-- [ ] T035 [US1] Implement `frontend/src/sections/AuctionPanel.tsx` (status, countdown, RadialGauge time arc, highest bid/bidder readouts, NFT preview) and `frontend/src/sections/BidForm.tsx` (amount input ETH, inline validation) → T034 GREEN
-- [ ] T036 [P] [US1] RED tests `frontend/src/hooks/useActivityLog.test.ts` + `frontend/src/sections/ActivityLog.test.tsx`: fetches Start/Bid/Withdraw/End logs, ordered newest-first, actor + amount + time formatting (FR-009)
-- [ ] T037 [US1] Implement `frontend/src/hooks/useActivityLog.ts` + `frontend/src/sections/ActivityLog.tsx`; mount `TxToast` globally (FR-010 surface) → T036 GREEN
-- [ ] T038 [US1] Assemble `frontend/src/App.tsx` single-page composition (Header, AuctionPanel, BidForm, ActivityLog, TxToast) per frontend-ui.md §1; run quickstart V1 + V4 manually
+- [X] T034 [P] [US1] RED tests `frontend/src/sections/AuctionPanel.test.tsx` + `frontend/src/sections/BidForm.test.tsx`: readouts + countdown + gauge render; BidForm disabled states per state→action matrix (frontend-ui.md §3)
+- [X] T035 [US1] Implement `frontend/src/sections/AuctionPanel.tsx` (status, countdown, RadialGauge time arc, highest bid/bidder readouts, NFT preview) and `frontend/src/sections/BidForm.tsx` (amount input ETH, inline validation) → T034 GREEN
+- [X] T036 [P] [US1] RED tests `frontend/src/hooks/useActivityLog.test.ts` + `frontend/src/sections/ActivityLog.test.tsx`: fetches Start/Bid/Withdraw/End logs, ordered newest-first, actor + amount + time formatting (FR-009)
+- [X] T037 [US1] Implement `frontend/src/hooks/useActivityLog.ts` + `frontend/src/sections/ActivityLog.tsx`; mount `TxToast` globally (FR-010 surface) → T036 GREEN
+- [X] T038 [US1] Assemble `frontend/src/App.tsx` single-page composition (Header, AuctionPanel, BidForm, ActivityLog, TxToast) per frontend-ui.md §1; run quickstart V1 + V4 manually
 
 **Checkpoint**: US1 fully functional — MVP demoable (bid on a pre-started auction)
 
@@ -201,7 +201,7 @@ empty/invalid URI warned (quickstart V2)
 ## Phase 8: Polish & Cross-Cutting Concerns
 
 - [ ] T063 [P] Responsive + a11y pass across `frontend/src/sections/` and `frontend/src/components/`: 360px width no horizontal scroll, focus rings `--color-white`, contrast ≥14:1 paper-on-void; update tests (FR-012, SC-007)
-- [ ] T064 [P] Add quality gates to `scripts/check.sh`: SC-004 palette gate (fail on any hex/rgb/hsl/oklch literal in `frontend/src` outside `frontend/src/styles/caliper.css`) AND SC-006 bundle budget (fail if initial JS+CSS from `vite build` exceeds 300 KB gzip)
+- [X] T064 [P] Add quality gates to `scripts/check.sh`: SC-004 palette gate (fail on any hex/rgb/hsl/oklch literal in `frontend/src` outside `frontend/src/styles/caliper.css`) AND SC-006 bundle budget (fail if initial JS+CSS from `vite build` exceeds 300 KB gzip)
 - [ ] T065 [P] Connection/error states (tests first → impl): `chain_unreachable` (502) and `not_deployed` (503) Caliper-styled views in `frontend/src/sections/ErrorState.tsx` + boot wiring in `frontend/src/App.tsx` (spec edge cases, SC-005)
 - [ ] T066 Verify/raise coverage ≥95% lines / ≥90% branches all three packages (`forge coverage`, `vitest --coverage`); close gaps with RED-first tests (constitution III)
 - [ ] T067 Documentation sync per constitution V: root `README.md` (run/deploy/validation), NatSpec final review in `contracts/src/*.sol`, record known debt — Playwright e2e deferral (research R6) — in `docs/tech-debt.md`

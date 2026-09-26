@@ -31,7 +31,6 @@ export async function probeChain(anvilUrl: string): Promise<boolean> {
 }
 
 async function forwardJsonRpc(
-  req: Request,
   res: Response,
   config: AppConfig,
   payload: unknown,
@@ -72,7 +71,7 @@ export function createRpcProxy(config: AppConfig): Router {
 
   router.post('/', (req: Request, res: Response) => {
     // express.json already parsed; strict mode limits bodies to objects/arrays.
-    void forwardJsonRpc(req, res, config, req.body);
+    void forwardJsonRpc(res, config, req.body);
   });
 
   router.get('/', (req: Request, res: Response) => {
@@ -88,7 +87,7 @@ export function createRpcProxy(config: AppConfig): Router {
       res.status(400).json({ error: 'invalid_json', message: 'unparseable ?data= JSON' });
       return;
     }
-    void forwardJsonRpc(req, res, config, payload);
+    void forwardJsonRpc(res, config, payload);
   });
 
   return router;

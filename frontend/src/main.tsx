@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './styles/caliper.css';
 import { loadRuntimeConfig } from './lib/config';
 import { Providers } from './app/providers';
-import { Header } from './sections/Header';
+import { App } from './App';
 import { DisplayHeading } from './components/DisplayHeading';
 import { MonoLabel } from './components/MonoLabel';
 
@@ -48,9 +48,7 @@ export async function renderApp(
   createRoot(root).render(
     <StrictMode>
       <Providers config={config}>
-        <div className="relative min-h-screen bg-void">
-          <Header />
-        </div>
+        <App />
       </Providers>
     </StrictMode>,
   );

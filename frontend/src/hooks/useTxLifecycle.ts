@@ -11,6 +11,7 @@ import type {
 import { EnglishAuctionAbi } from '../lib/abi/EnglishAuction';
 import { SolimanWeb3Abi } from '../lib/abi/SolimanWeb3';
 import { friendlyMessage } from '../lib/errors';
+import { useTxStore } from '../app/TxProvider';
 import type { TxLifecycle } from '../lib/types';
 
 type WriteNames<abi extends Abi> = ContractFunctionName<
@@ -101,6 +102,17 @@ export function useTxLifecycle(): UseTxLifecycleResult {
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
   const { writeContractAsync } = useWriteContract();
   const receipt = useWaitForTransactionReceipt({ hash });
+  const store = useTxStore();
+
+  // FR-010 global surface: mirror every transition into the TxProvider store
+  // when mounted inside the app tree. Depends only on the *stable* `publish`
+  // callback (not the context value), so an external reset() from the toast's
+  // dismiss control is never immediately republished — and standalone usage
+  // without a provider keeps its own state (T037 store tests).
+  const publish = store?.publish;
+  useEffect(() => {
+    publish?.(tx);
+  }, [publish, tx]);
 
   const write = useCallback(
     async (params: TxWriteParams): Promise<void> => {

@@ -1,6 +1,7 @@
 import path from 'node:path';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { isDeployed, loadConfig, type AppConfig } from './config';
+import { loadDotEnvFile } from './env';
 import { createRpcProxy, probeChain } from './rpc-proxy';
 
 /**
@@ -80,6 +81,8 @@ export function createApp(config: AppConfig = loadConfig()): express.Express {
 }
 
 if (require.main === module) {
+  // deploy.sh writes backend/.env — load it (env vars already set win).
+  loadDotEnvFile(path.join(__dirname, '..', '.env'));
   const config = loadConfig();
   createApp(config).listen(config.port, () => {
     console.log(`backend listening on :${config.port}`);

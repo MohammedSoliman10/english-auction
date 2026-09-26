@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { TxToast } from './TxToast';
 
 const HASH = '0x1234567890abcdef1234567890abcdef12345678' as const;
@@ -29,5 +29,21 @@ describe('TxToast', () => {
 
     rerender(<TxToast tx={{ status: 'reverted', message: 'Transfer failed — retry' }} />);
     expect(screen.getByRole('status')).toHaveTextContent('Transfer failed — retry');
+  });
+
+  it('offers a dismiss control on terminal outcomes only', () => {
+    const onDismiss = vi.fn();
+    const { rerender } = render(<TxToast tx={{ status: 'success' }} onDismiss={onDismiss} />);
+
+    const dismiss = screen.getByRole('button', { name: /dismiss/i });
+    fireEvent.click(dismiss);
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+
+    // In-flight actions cannot be dismissed — only terminal states can.
+    rerender(<TxToast tx={{ status: 'awaiting_confirmation' }} onDismiss={onDismiss} />);
+    expect(screen.queryByRole('button', { name: /dismiss/i })).not.toBeInTheDocument();
+
+    rerender(<TxToast tx={{ status: 'pending', hash: HASH }} onDismiss={onDismiss} />);
+    expect(screen.queryByRole('button', { name: /dismiss/i })).not.toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { numberToHex } from 'viem';
-import { useAccount, useChainId, useConnect, useSwitchChain } from 'wagmi';
+import { useAccount, useConnect, useSwitchChain } from 'wagmi';
 import { DisplayHeading } from '../components/DisplayHeading';
 import { MonoLabel } from '../components/MonoLabel';
 import { useRuntimeConfig } from '../lib/config';
@@ -23,14 +23,17 @@ const WALLET_REJECTED = 4001;
  */
 export function Header() {
   const config = useRuntimeConfig();
-  const { address, isConnected } = useAccount();
+  // The wallet's ACTUAL chain rides on the account/connection state —
+  // `useChainId()` only tracks the app-selected chain (config default) and
+  // would never reveal a wallet sitting on a foreign network (V1/FR-001).
+  const { address, isConnected, chainId: walletChainId } = useAccount();
   const { connect, connectors } = useConnect();
-  const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const [notice, setNotice] = useState<string | null>(null);
   const promptedRef = useRef(false);
 
-  const wrongNetwork = isConnected && chainId !== config.chainId;
+  const wrongNetwork =
+    isConnected && walletChainId !== undefined && walletChainId !== config.chainId;
 
   /** Guided switch: switch → (4902) add chain → (4001) decline notice. */
   const promptSwitch = useCallback(async () => {
