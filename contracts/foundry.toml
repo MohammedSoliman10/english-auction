@@ -1,0 +1,48 @@
+# English Auction — Foundry configuration
+# Constitution tooling gate: exact-pinned solc, fmt/lint clean, coverage gates in scripts/check.sh
+
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+# R5 #3: exact pinned compiler for all contracts
+solc = "0.8.31"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "forge-std/=lib/forge-std/src/",
+]
+
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = false
+int_types = "long"
+quote_style = "double"
+number_underscore = "thousands"
+
+[lint]
+severity = ["high", "medium", "low"]
+lint_on_build = true
+# block-timestamp: the auction is *defined* by time bounds (bid window opens/closes
+# at `endAt = start + duration`). Validator skew (~±15s) is acceptable for a 7-day
+# window and is documented in spec edge cases — suppressing the advisory lint, not
+# an error class.
+exclude_lints = ["block-timestamp"]
+
+[fuzz]
+runs = 500
+
+[invariant]
+runs = 64
+depth = 32
+fail_on_revert = false
+
+# Coverage thresholds enforced by scripts/check.sh (constitution III: >=95% lines, >=90% branches)
+[profile.ci]
+fuzz = { runs = 1024 }
+invariant = { runs = 256 }

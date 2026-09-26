@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* ── Caliper design tokens (SC-004 — the ONLY 7 color values in the app) ── */
+@theme {
+  --color-void: #0a0d09; /* page background */
+  --color-surface-1: #131519; /* panel background */
+  --color-surface-2: #1d2026; /* raised surface / fills */
+  --color-surface-3: #2a2e35; /* hairline grid + borders */
+  --color-signal: #979c99; /* mid-gray text, mid signal steps */
+  --color-paper: #f4f5f7; /* primary text */
+  --color-white: #ffffff; /* display headings, peak bar, CTA fill */
+
+  --font-display: "Inter Tight", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+}
+
+/* ── 13-step grayscale signal ramp (mirrors the reference image) ──────────
+   Near-gray only: every step's channel spread ≤ 16 (SC-004 achromatic). */
+:root {
+  --bar-step-0: #131519;
+  --bar-step-1: #27292c;
+  --bar-step-2: #3a3c3f;
+  --bar-step-3: #4e5053;
+  --bar-step-4: #626366;
+  --bar-step-5: #757779;
+  --bar-step-6: #898a8c;
+  --bar-step-7: #9d9e9f;
+  --bar-step-8: #b0b1b2;
+  --bar-step-9: #c4c5c6;
+  --bar-step-10: #d8d8d9;
+  --bar-step-11: #ebecec;
+  --bar-step-12: #ffffff;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--color-void);
+    color: var(--color-paper);
+    font-family: var(--font-mono);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Achromatic focus — white ring only, never hue (FR-011/FR-012) */
+  :focus-visible {
+    outline: 2px solid var(--color-white);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-signal);
+    color: var(--color-void);
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
