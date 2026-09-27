@@ -43,22 +43,27 @@ npm start                       # backend :3000 — SPA + /api/* + /rpc proxy
 The browser only ever talks to same-origin `/rpc` (proxied to the localhost-bound
 node) and `/api/config` (runtime addresses — never baked into the bundle, R4).
 
-**Deployment target — Vercel**: the serverless adaptation lives in
+**Deployment target — Vercel (live)**: the serverless adaptation lives in
 [`api/`](api/) — three path-agnostic functions reusing the shared Express
 app (`backend/src/vercel.ts` rebase-paths each request to its owned route,
 so `/rpc` works through the `vercel.json` rewrite under any URL semantics),
 plus [`vercel.json`](vercel.json) (Vite build → `frontend/dist`, `/rpc`
-rewrite). Remaining deploy-time steps (T069, blocked on provisioning):
+rewrite + SPA history fallback). Live demo: **<https://english-auction-nine.vercel.app>**
+(Sepolia, chainId 11155111). Deploy runbook (T069 executed 2026-09-27):
 
 1. `npm i -g vercel` → `vercel link` → set project env vars:
-   `ANVIL_URL` (remote RPC), `CHAIN_ID`, `CHAIN_NAME`, `AUCTION_ADDRESS`,
-   `NFT_ADDRESS` (and optionally `NATIVE_CURRENCY_NAME/SYMBOL/DECIMALS`).
-2. Deploy the contracts to that chain
-   (`forge script --rpc-url $ANVIL_URL --private-key <deployer key>`),
-   then put the resulting addresses into the env vars.
-3. `vercel deploy --prod` and re-verify quickstart V1, V4, V8 against the
-   public origin — the wallet add-network flow uses
-   `https://<host>/rpc` (same-origin, built by the frontend at runtime).
+   `ANVIL_URL` (remote RPC — must accept ≥5,000-block `eth_getLogs` ranges;
+   Alchemy Free's 10-block cap is too small), `CHAIN_ID`, `CHAIN_NAME`,
+   `AUCTION_ADDRESS`, `NFT_ADDRESS`, `DEPLOYED_AT`, `DEPLOY_BLOCK` (auction
+   creation block — activity-log paging), and optionally
+   `NATIVE_CURRENCY_NAME/SYMBOL/DECIMALS`.
+2. Deploy the contracts to that chain (individual `cast send --create`
+   transactions — multi-tx `forge script` broadcast trips delegated-account
+   in-flight limits), then `approve()` + `start()` the auction as the seller;
+   put the addresses and the auction's creation block into the env vars.
+3. `vercel deploy --prod` — quickstart V1, V4, V8 were re-verified against
+   the public origin (25/25 checks): the wallet add-network flow carries the
+   absolute `https://<host>/rpc`.
 
 ## Validation
 
@@ -77,7 +82,7 @@ rewrite). Remaining deploy-time steps (T069, blocked on provisioning):
 | 9 | Vitest coverage ≥95/90 for frontend **and** backend (thresholds enforced in config) | III |
 
 Measured: contracts **100 % lines / 96 % branches** (49 tests), frontend
-**98.9 % / 92.5 %** (217 tests), backend **95.6 % / 96.7 %** (25 tests).
+**98.9 % / 92.4 %** (218 tests), backend **96.0 % / 97.4 %** (38 tests).
 
 End-to-end walkthrough (scenarios V1–V9: lifecycle, refunds, settle, zero-bid,
 failures, design/responsive): [`specs/001-auction-web-ui/quickstart.md`](specs/001-auction-web-ui/quickstart.md).

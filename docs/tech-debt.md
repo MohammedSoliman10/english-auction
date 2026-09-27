@@ -33,8 +33,8 @@ them.
 
 **What**: `backend/src/server.ts`'s `require.main === module` block (load
 `.env`, `listen`) is outside unit coverage — it can only run in a separate
-process, which v8 coverage does not attribute. Backend sits at ~95.6 % lines /
-96.7 % branches (thresholds enforced), just above the constitution floor.
+process, which v8 coverage does not attribute. Backend sits at ~96.0 % lines /
+97.4 % branches (thresholds enforced), above the constitution floor.
 
 **Why acceptable**: the block is trivial glue that is exercised by every
 `npm run dev` / `npm start` and by the live quickstart runs.
@@ -44,27 +44,41 @@ stdout line (behavioral, still not coverage-attributed) — or fold the block
 into an exported `startServer()` and call it from a test with a stubbed
 listener.
 
-## 3. Vercel deployment (pending provisioning — T069)
+## 3. Vercel deployment (live — T069 verified)
 
-**What**: the serverless adaptation is **implemented and tested**
-(`api/{index,config,health}.ts` path-agnostic functions over the shared
-Express app + `vercel.json`; `NATIVE_CURRENCY_*` env overrides for
-arbitrary EVM chains), but no deployment exists yet: the wallet key and
-remote RPC URL are user-provisioned (FR-013/FR-014), a Vercel project must
-be linked, and contracts must be deployed to the target chain first.
+**What**: the serverless adaptation shipped and passed remote validation
+(2026-09-27). Live app: <https://english-auction-nine.vercel.app> (Sepolia,
+chainId 11155111). Contracts: auction `0x8251a9C764236E2D53bdce65C49000CCaDccFc74`,
+NFT `0xd02f9fc480be6351cee993f49abaee68c0b9ee24`. Project env (production):
+`ANVIL_URL`, `CHAIN_ID`, `CHAIN_NAME`, `AUCTION_ADDRESS`, `NFT_ADDRESS`,
+`DEPLOYED_AT`, `DEPLOY_BLOCK`.
 
-**Why deferred**: deployment is the endgame step; the wallet key and RPC URL
-are user-provisioned at that point (FR-013/FR-014). Tracked in the README
-“Deployment target” section.
+**Task status — T069 PASSED (25/25 checks)**: V1 (cold load 1.3 s, guided
+add/switch — `wallet_addEthereumChain` carries the absolute
+`https://<host>/rpc`), V4 (real Sepolia bids through the `/rpc` proxy:
+CONFIRMED toast → readout → activity row, FR-010 rejection), V8 (`/rpc`
+requests aborted → `chain_unreachable` → recovery), SPA deep-link fallback
+(`vercel.json` catch-all rewrite). Evidence: `/tmp/opencode/quickstart/t069-*.png`.
 
-**Task status — T069 BLOCKED**: remote production validation cannot run
-until a real host exists. Per the task's escape clause this is recorded
-here rather than silently skipped. When the Vercel deployment lands (user
-provides the wallet key + RPC URL), re-run the quickstart “Production
-Deployment” section against the public origin and re-verify **V1** (cold
-load + wallet add/switch-network against `https://<host>/rpc`), **V4**
-(bidding through the public proxy), and **V8** (chain-death →
-`chain_unreachable` recovery) there.
+**Two production defects found & fixed during T069** (test-first; both were
+invisible on the local chain):
+
+1. **Add-network URL**: wagmi's injected connector raises
+   `wallet_addEthereumChain` itself from `chain.rpcUrls` on 4902 — the
+   relative `/rpc` is rejected by real wallets. `Header.tsx` now passes an
+   absolute same-origin `addEthereumChainParameter.rpcUrls`.
+2. **Activity-log range**: `eth_getLogs` from genesis fails on every free
+   provider (Alchemy Free caps ranges at 10 blocks) — the log rendered
+   silently empty. `useActivityLog` now pages 5,000-block windows from
+   `/api/config`'s `deployBlock` (optional `DEPLOY_BLOCK` env; `0` keeps the
+   local demo-chain behavior).
+
+**Residual requirements**: `ANVIL_URL` must accept ≥5,000-block
+`eth_getLogs` ranges (publicnode: 50 000 ✓, drpc: 10 000 ✓, Alchemy Free: 10 ✗
+— the demo uses `https://ethereum-sepolia-rpc.publicnode.com`). Contract deploys
+on this account must be issued as individual `cast send --create`/`cast call`
+transactions — forge's multi-tx broadcast trips the provider's
+delegated-account in-flight limit.
 
 ## 4. Quickstart runners are environment-local
 

@@ -36,3 +36,5 @@ Thumbs.db
 
 # forge doc output
 contracts/docs/
+.vercel
+.env*

@@ -5,6 +5,7 @@
   "buildCommand": "npm run build -w frontend",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/rpc", "destination": "/api/index" }
+    { "source": "/rpc", "destination": "/api/index" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

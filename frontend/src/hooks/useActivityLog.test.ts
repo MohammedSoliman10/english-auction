@@ -5,6 +5,7 @@ import { encodeAbiParameters, encodeEventTopics, type Hex } from 'viem';
 const mocks = vi.hoisted(() => ({
   usePublicClient: vi.fn(),
   useWatchContractEvent: vi.fn(),
+  deployBlock: 0,
 }));
 
 vi.mock('wagmi', () => ({
@@ -16,6 +17,7 @@ vi.mock('../lib/config', () => ({
   useRuntimeConfig: () => ({
     chainId: 2026,
     auctionAddress: '0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0',
+    deployBlock: mocks.deployBlock,
   }),
 }));
 
@@ -72,12 +74,14 @@ function mockChain(logs: unknown[]) {
   const getBlock = vi.fn(({ blockNumber }: { blockNumber: bigint }) =>
     Promise.resolve({ timestamp: BLOCK_TIME[String(blockNumber)] ?? 0n }),
   );
-  mocks.usePublicClient.mockReturnValue({ getLogs, getBlock });
-  return { getLogs, getBlock };
+  const getBlockNumber = vi.fn().mockResolvedValue(104n);
+  mocks.usePublicClient.mockReturnValue({ getLogs, getBlock, getBlockNumber });
+  return { getLogs, getBlock, getBlockNumber };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.deployBlock = 0;
   mocks.useWatchContractEvent.mockReturnValue(undefined);
 });
 
@@ -98,7 +102,7 @@ describe('useActivityLog — FR-009 fetch + decode + newest-first', () => {
     expect(getLogs).toHaveBeenCalledWith({
       address: AUCTION,
       fromBlock: 0n,
-      toBlock: 'latest',
+      toBlock: 104n, // one page covers the whole (short) range
     });
     expect(result.current.error).toBeUndefined();
     expect(result.current.entries.map((e) => e.kind)).toEqual([
@@ -147,6 +151,35 @@ describe('useActivityLog — FR-009 fetch + decode + newest-first', () => {
     act(() => watcher.onLogs([]));
     await waitFor(() => expect(getLogs).toHaveBeenCalledTimes(2));
   });
+
+  it('pages the range from deployBlock in provider-safe windows (T069)', async () => {
+    mocks.deployBlock = 90;
+    const startLog = [makeLog('Start', 100n, 0)];
+    const getLogs = vi
+      .fn()
+      .mockImplementation(({ fromBlock }: { fromBlock: bigint }) =>
+        Promise.resolve(fromBlock <= 100n ? startLog : []),
+      );
+    const getBlock = vi.fn(({ blockNumber }: { blockNumber: bigint }) =>
+      Promise.resolve({ timestamp: BLOCK_TIME[String(blockNumber)] ?? 0n }),
+    );
+    mocks.usePublicClient.mockReturnValue({
+      getLogs,
+      getBlock,
+      getBlockNumber: vi.fn().mockResolvedValue(11_000n),
+    });
+
+    const { result } = renderHook(() => useActivityLog());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // 90 → 11000 spans three 5000-block windows: [90,5089] [5090,10089] [10090,11000].
+    expect(getLogs).toHaveBeenCalledTimes(3);
+    expect(getLogs).toHaveBeenNthCalledWith(1, { address: AUCTION, fromBlock: 90n, toBlock: 5089n });
+    expect(getLogs).toHaveBeenNthCalledWith(2, { address: AUCTION, fromBlock: 5090n, toBlock: 10089n });
+    expect(getLogs).toHaveBeenNthCalledWith(3, { address: AUCTION, fromBlock: 10090n, toBlock: 11_000n });
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.entries.map((e) => e.kind)).toEqual(['Start']);
+  });
 });
 
 describe('useActivityLog — failure states (data-model §1)', () => {
@@ -154,6 +187,7 @@ describe('useActivityLog — failure states (data-model §1)', () => {
     mocks.usePublicClient.mockReturnValue({
       getLogs: vi.fn().mockRejectedValue(new Error('boom')),
       getBlock: vi.fn(),
+      getBlockNumber: vi.fn().mockResolvedValue(104n),
     });
 
     const { result } = renderHook(() => useActivityLog());

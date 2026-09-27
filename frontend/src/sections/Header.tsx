@@ -38,7 +38,17 @@ export function Header() {
   /** Guided switch: switch → (4902) add chain → (4001) decline notice. */
   const promptSwitch = useCallback(async () => {
     try {
-      await switchChainAsync({ chainId: config.chainId });
+      await switchChainAsync({
+        chainId: config.chainId,
+        // T069 — wagmi's injected connector raises wallet_addEthereumChain
+        // itself from these parameters when the wallet reports 4902 (the
+        // wallet doesn't know the chain yet). Relative config.rpcUrl ("/rpc")
+        // is rejected by wallets, so the add flow gets the absolute
+        // same-origin URL; the transport keeps the relative path.
+        addEthereumChainParameter: {
+          rpcUrls: [new URL(config.rpcUrl, window.location.origin).toString()],
+        },
+      });
       setNotice(null);
     } catch (err) {
       const code = (err as { code?: number } | null)?.code;

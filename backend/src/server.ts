@@ -39,9 +39,26 @@ export function createApp(config: AppConfig = loadConfig()): express.Express {
       });
       return;
     }
-    const { chainId, chainName, rpcUrl, nativeCurrency, auctionAddress, nftAddress, deployedAt } =
-      config;
-    res.json({ chainId, chainName, rpcUrl, nativeCurrency, auctionAddress, nftAddress, deployedAt });
+    const {
+      chainId,
+      chainName,
+      rpcUrl,
+      nativeCurrency,
+      auctionAddress,
+      nftAddress,
+      deployedAt,
+      deployBlock,
+    } = config;
+    res.json({
+      chainId,
+      chainName,
+      rpcUrl,
+      nativeCurrency,
+      auctionAddress,
+      nftAddress,
+      deployedAt,
+      deployBlock,
+    });
   });
 
   // ── Static SPA + history fallback (skipped cleanly when not built yet) ──

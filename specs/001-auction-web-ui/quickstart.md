@@ -54,6 +54,15 @@ Validated by task T069 (re-verify V1, V4, V8 against the public origin).
 `/api/config`); a wiped chain state file requires re-running step 3
 (demo-ledger limitation — research R3).
 
+**T069 executed 2026-09-27 on Vercel instead of a self-managed host**: the same
+checks ran against `https://english-auction-nine.vercel.app` (Sepolia; `/rpc`
+proxies to a remote RPC instead of local Anvil) — V1 (guided add/switch, the
+`wallet_addEthereumChain` prompt carries the absolute `https://<host>/rpc`),
+V4 (real Sepolia bids through the public proxy), V8 (`/rpc` requests aborted
+→ `chain_unreachable` → recovery), plus the SPA deep-link fallback —
+**25/25 checks green**; two production-only defects found and fixed on the way
+(`docs/tech-debt.md` §3).
+
 ## Validation scenarios
 
 Each scenario maps to spec acceptance scenarios; run in order for a full lifecycle demo

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { usePublicClient, useWatchContractEvent } from 'wagmi';
-import { decodeEventLog, type Address } from 'viem';
+import { decodeEventLog, type Address, type Log } from 'viem';
 import { EnglishAuctionAbi } from '../lib/abi/EnglishAuction';
 import { useRuntimeConfig } from '../lib/config';
 
@@ -30,9 +30,18 @@ export interface UseActivityLogResult {
 const POLL_MS = 4000;
 
 /**
+ * eth_getLogs window (blocks). Free Sepolia endpoints cap log ranges —
+ * Alchemy Free: 10, 1rpc: 50, drpc: 10 000, publicnode: 50 000 — so reads
+ * page forward from the auction's deploy block in 5 000-block windows that
+ * every supported provider accepts (T069 production verification).
+ */
+const LOG_PAGE_BLOCKS = 5_000n;
+
+/**
  * FR-009 — activity log derived from on-chain Start/Bid/Withdraw/End logs.
  *
- * - Reads the auction's logs from genesis (local demo chain) and decodes
+ * - Reads the auction's logs from its deploy block in provider-safe
+ *   5 000-block pages (from genesis on the local demo chain) and decodes
  *   them with the synced ABI; block timestamps are fetched per unique block.
  * - Re-reads on mount, on a 4s poll, and whenever an auction event lands
  *   (contract §6 event → re-read rule).
@@ -54,11 +63,22 @@ export function useActivityLog(): UseActivityLogResult {
       return;
     }
     try {
-      const logs = await publicClient.getLogs({
-        address: config.auctionAddress,
-        fromBlock: 0n,
-        toBlock: 'latest',
-      });
+      // Paged range: auction events only exist from its creation block
+      // onward, and providers cap eth_getLogs windows (T069).
+      const latest = await publicClient.getBlockNumber();
+      const logs: Log[] = [];
+      let start = BigInt(config.deployBlock ?? 0);
+      while (start <= latest) {
+        const end = start + LOG_PAGE_BLOCKS - 1n > latest ? latest : start + LOG_PAGE_BLOCKS - 1n;
+        logs.push(
+          ...(await publicClient.getLogs({
+            address: config.auctionAddress,
+            fromBlock: start,
+            toBlock: end,
+          })),
+        );
+        start = end + 1n;
+      }
 
       // Newest-first: higher block first, ties broken by log index.
       const sorted = [...logs].sort((a, b) => {
@@ -111,7 +131,7 @@ export function useActivityLog(): UseActivityLogResult {
     } finally {
       setIsLoading(false);
     }
-  }, [publicClient, config.auctionAddress]);
+  }, [publicClient, config.auctionAddress, config.deployBlock]);
 
   // Initial read + safety-net poll.
   useEffect(() => {

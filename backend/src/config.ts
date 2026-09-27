@@ -18,6 +18,12 @@ export interface AppConfig {
   auctionAddress: string;
   nftAddress: string;
   deployedAt: string;
+  /**
+   * Block the auction contract was created in — activity-log reads page
+   * forward from here in provider-safe windows instead of scanning from
+   * genesis (T069). 0 = local demo, reads from block 0.
+   */
+  deployBlock: number;
 }
 
 /** Read config from an environment-like object (defaults to process.env). */
@@ -38,6 +44,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     auctionAddress: env.AUCTION_ADDRESS ?? '',
     nftAddress: env.NFT_ADDRESS ?? '',
     deployedAt: env.DEPLOYED_AT ?? '',
+    // Clamp: a non-numeric env must not poison the log-window arithmetic.
+    deployBlock: Number(env.DEPLOY_BLOCK ?? 0) || 0,
   };
 }
 

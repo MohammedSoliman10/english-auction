@@ -22,4 +22,10 @@ export interface RuntimeConfig {
   auctionAddress: `0x${string}`;
   nftAddress: `0x${string}`;
   deployedAt: string;
+  /**
+   * Auction contract creation block — the activity log pages its
+   * eth_getLogs reads from here instead of genesis so free-tier RPC
+   * range caps hold (T069). Optional; absent = 0 (local demo chain).
+   */
+  deployBlock?: number;
 }

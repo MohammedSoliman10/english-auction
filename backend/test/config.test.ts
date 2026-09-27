@@ -17,6 +17,7 @@ describe('GET /api/config', () => {
       auctionAddress: TEST_ENV.AUCTION_ADDRESS,
       nftAddress: TEST_ENV.NFT_ADDRESS,
       deployedAt: '2026-09-26T12:00:00.000Z',
+      deployBlock: 11793146,
     });
   });
 
@@ -41,6 +42,7 @@ describe('loadConfig — T066 default fallbacks (constitution III branches)', ()
       auctionAddress: '',
       nftAddress: '',
       deployedAt: '',
+      deployBlock: 0,
     });
   });
 });
@@ -54,5 +56,11 @@ describe('loadConfig — native currency overrides (T069 Vercel deploy)', () => 
       NATIVE_CURRENCY_DECIMALS: '6',
     });
     expect(cfg.nativeCurrency).toEqual({ name: 'Test Coin', symbol: 'TST', decimals: 6 });
+  });
+});
+
+describe('loadConfig — deploy block (T069 activity-log paging)', () => {
+  it('clamps a non-numeric DEPLOY_BLOCK to 0', () => {
+    expect(loadConfig({ ...TEST_ENV, DEPLOY_BLOCK: 'not-a-number' }).deployBlock).toBe(0);
   });
 });

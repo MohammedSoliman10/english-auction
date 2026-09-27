@@ -95,7 +95,15 @@ describe('Header — guided network switch (FR-001, V1)', () => {
     mockWallet({ connected: true, chainId: 1 });
     renderHeader();
     await waitFor(() =>
-      expect(switchChainAsync).toHaveBeenCalledWith({ chainId: 2026 }),
+      expect(switchChainAsync).toHaveBeenCalledWith({
+        chainId: 2026,
+        // T069: wagmi's injected connector auto-raises wallet_addEthereumChain
+        // from these parameters on 4902 — wallets reject the relative "/rpc",
+        // so the add-network flow must receive an absolute same-origin URL.
+        addEthereumChainParameter: {
+          rpcUrls: [expect.stringMatching(/^https?:\/\/.+\/rpc$/)],
+        },
+      }),
     );
     expect(switchChainAsync).toHaveBeenCalledTimes(1);
     // effect must not re-prompt on re-render
@@ -131,7 +139,7 @@ describe('Header — guided network switch (FR-001, V1)', () => {
             chainId: '0x7ea', // 2026
             chainName: 'English Auction Chain',
             nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-            rpcUrls: [expect.stringMatching(/\/rpc$/)],
+            rpcUrls: [expect.stringMatching(/^https?:\/\/.+\/rpc$/)],
           }),
         ],
       }),
