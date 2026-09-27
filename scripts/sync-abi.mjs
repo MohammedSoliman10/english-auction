@@ -28,8 +28,14 @@ function findArtifact(name) {
 
 function main() {
   if (!existsSync(OUT_DIR)) {
-    console.error('sync-abi: contracts/out missing — run `forge build` first');
-    process.exit(1);
+    // Git-triggered builds (Vercel) clone without the gitignored forge
+    // artifacts — fall back to the committed ABIs, which are the exact
+    // files the test suite validates. Local builds still re-sync when
+    // contracts/out exists, so drift is caught by `npm run dev/build`.
+    console.warn(
+      'sync-abi: contracts/out missing (fresh clone?) — keeping committed ABIs in frontend/src/lib/abi/',
+    );
+    process.exit(0);
   }
 
   mkdirSync(DEST_DIR, { recursive: true });
