@@ -9,6 +9,7 @@ server-side so visitors never run a node.
 [![Tests](https://img.shields.io/badge/tests-49_forge_%C2%B7_218_frontend_%C2%B7_38_backend-black?style=flat-square)](#validation)
 [![Coverage](https://img.shields.io/badge/coverage-100%25_%2F_98.9%25_%2F_96%25-black?style=flat-square)](#validation)
 [![Solidity](https://img.shields.io/badge/solc-0.8.31_pinned-black?style=flat-square)](contracts/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black?style=flat-square)](LICENSE)
 
 **▶ Try it live: <https://english-auction-nine.vercel.app>** (Sepolia, chainId
 11155111) — connect a wallet, follow the guided add/switch-network prompt, and
@@ -176,3 +177,7 @@ Spec → plan → tasks live in [`specs/001-auction-web-ui/`](specs/001-auction-
 project principles (code quality, test-first, coverage, maintainability,
 documentation) in [`.specify/memory/constitution.md`](.specify/memory/constitution.md).
 All 70 plan tasks are complete.
+
+## License
+
+[MIT](LICENSE) © 2026 Mohammed Soliman
