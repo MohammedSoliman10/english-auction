@@ -124,6 +124,11 @@ semantics), plus [`vercel.json`](vercel.json) (Vite build → `frontend/dist`,
    add/switch carrying the absolute `https://<host>/rpc`), V4 (real bids through
    the public proxy) and V8 (chain-unreachable → recovery), plus SPA deep links.
 
+With the GitHub repo connected (done during `vercel link`), every push also
+auto-deploys: `main` → Production, feature branches → Preview. Git builds clone
+without the gitignored forge artifacts, so `scripts/sync-abi.mjs` falls back to
+the committed ABIs (the exact files the test suites validate).
+
 Live deployment: **<https://english-auction-nine.vercel.app>**
 · auction `0x8251a9C764236E2D53bdce65C49000CCaDccFc74` ·
 NFT `0xd02f9fc480be6351cee993f49abaee68c0b9ee24`
